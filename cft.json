@@ -5,7 +5,10 @@
 
 	},
 	"Parameters": {
-	
+		"redisTTL":{
+			"Type": "String",
+			"Default": ""
+		}
 	},
 	"Mappings": {
 
@@ -23,7 +26,7 @@
 		  }
 		},
 		
-		"elasticacheCacheCluster": {
+		"redisCacheCluster": {
 		   "Type": "AWS::ElastiCache::CacheCluster",
 		   "Properties":
 		   {
@@ -50,6 +53,21 @@
 		},
 		
 		
+		"lambdaRole": {
+		   "Type": "AWS::IAM::Role",
+		   "Properties": {
+			  "AssumeRolePolicyDocument": { 
+
+			   },
+			  "Path": "",
+			  "Policies": [ 
+				{
+					
+				}
+			   ]
+		   }
+		},
+		
 		"lambdaFunction": {
 		  "Type": "AWS::Lambda::Function",
 		  "Properties": {
@@ -59,24 +77,35 @@
 			  "S3ObjectVersion": "",
 			  "ZipFile": ""
 			},
-			"Handler": "",
-			"Role": "",
-			"Runtime": "",
-			"FunctionName": "",
+			"Handler": "main.handler",
+			"Role": { "Ref": "lambdaRole" },
+			"Runtime": "Node8.10",
+			"FunctionName": "smashgg-recently-finished-sets",
 			"MemorySize": 128,
 			"Timeout": 5,
 			"KmsKeyArn": "",
 			"Environment": {
 			  "Variables": {
-				"":"",
-				"":""
+				"redisUrl": { 
+					"Fn::GetAtt": [
+						"redisCacheCluster",
+						"RedisEndpoint.Address"
+					]	
+				},
+				"redisPort": {
+					"Fn::GetAtt": [
+						"redisCacheCluster",
+						"RedisEndpoint.Port"
+					]
+				},
+				"redisTTL": { "Ref": "redisTTL" }
 			  }
 			},
 			"VpcConfig": {
 			  "SecurityGroupIds": [ ],
 			  "SubnetIds": [ ]
 			},
-			"Description": ""
+			"Description": "Lambda function to fetch sets that were recently completed in a smashgg tournament or event"
 		  }
 		}
 		
