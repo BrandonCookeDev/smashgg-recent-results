@@ -7,22 +7,25 @@ let main = require('./main');
 
 (async function(){
 	try{
+		let clock;
 		let t = await Tournament.getTournament('ceo-2016')
 		let tournamentDate = moment(t.getStartTime()).add(30, 'minutes').toDate();
-		let clock = sinon.useFakeTimers(tournamentDate);
+		
+		//clock = sinon.useFakeTimers(tournamentDate);
 
 		let input = {
 			body:{
 				type: 'EVENT',
 				tournamentId: 'ceo-2016',
 				eventId: 'melee-singles',
-				minutesBack: 15
+				amount: 15,
+				d: tournamentDate.toString()
 			}
 		}
 
 		let value = await runmain(input);
 
-		clock.restore();
+		//clock.restore();
 
 		let e = await Event.getEvent(121480);
 		let eventDate = moment(e.getStartTime()).add(30, 'minutes').toDate();
@@ -31,7 +34,7 @@ let main = require('./main');
 			body:{
 				type: 'PHASE',
 				phaseId: '269600',
-				minutesBack: 15
+				amount: 15
 			}
 		}
 		value = await runmain(input);
@@ -43,7 +46,7 @@ let main = require('./main');
 			body:{
 				type: 'PHASEGROUP',
 				phaseGroupId: '589463',
-				minutesBack: 15
+				amount: 15
 			}
 		}
 		value = await runmain(input);

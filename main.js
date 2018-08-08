@@ -24,6 +24,9 @@ exports.handler = async function(event, context, callback){
 		let eventId 	 = input.eventId;
 		let phaseId 	 = input.phaseId;
 		let groupId		 = input.phaseGroupId;
+		let d 			 = input.d;
+		
+		if(d) require('sinon').useFakeTimers(new Date(d));
 
 		let sets = [];
 		switch(type.toLowerCase()){
