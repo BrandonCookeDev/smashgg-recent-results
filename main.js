@@ -19,7 +19,7 @@ exports.handler = async function(event, context, callback){
 
 		//Parse input
 		let type 		 = input.type;
-		let minutesBack  = input.minutesBack;
+		let minutesBack  = input.amount;
 		let tournamentId = input.tournamentId;
 		let eventId 	 = input.eventId;
 		let phaseId 	 = input.phaseId;
