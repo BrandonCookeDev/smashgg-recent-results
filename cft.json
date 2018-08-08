@@ -17,42 +17,7 @@
 
 	},
 	"Resources": {
-		
-		"elasticacheSecurityGroup": {
-		  "Type": "AWS::ElastiCache::SecurityGroup",
-		  "Properties":
-		  {
-			"Description": "SG for smashgg-recently-finished-games app"
-		  }
-		},
-		
-		"redisCacheCluster": {
-		   "Type": "AWS::ElastiCache::CacheCluster",
-		   "Properties":
-		   {
-			  "AutoMinorVersionUpgrade": "true",
-			  "CacheNodeType": "t2.micro",
-			  "CacheParameterGroupName": "",
-			  "CacheSecurityGroupNames": [ "" ],
-			  "CacheSubnetGroupName": "smashgg-recently-finished-games",
-			  "ClusterName": "smashgg-recent-games",
-			  "Engine": "redis",
-			  "EngineVersion": "4.0.10",
-			  "NumCacheNodes": "1",
-			  "Port": "6379",
-			  "PreferredAvailabilityZone": "",
-			  "PreferredAvailabilityZones": [ "" ],
-			  "PreferredMaintenanceWindow": "",
-			  "SnapshotArns": ["" ],
-			  "SnapshotRetentionLimit": "",
-			  "SnapshotWindow": "",
-			  "VpcSecurityGroupIds": [ 
-				  { "Ref": "elasticacheSecurityGroup" } 
-				]
-		   }
-		},
-		
-		
+				
 		"lambdaRole": {
 		   "Type": "AWS::IAM::Role",
 		   "Properties": {
