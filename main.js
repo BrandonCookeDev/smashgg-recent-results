@@ -11,39 +11,6 @@ winston.add(new winston.transports.Console({
 	json: false
 }));
 
-exports.validateBody = function(body){
-	var type;
-	if(!body.type)
-		return {err: 'type is a required parameter. Accepts (TOURNAMENT|EVENT|PHASE|PHASEGROUP)'};
-	else
-		type = body.type.toLowerCase();
-
-	if(!body.amount)
-		return {err: 'amount is a required parameter. Accepts an Integer for how many minute back to search'};
-	
-	if(type === 'tournament' && !body.tournamentId)
-		return {err: 'type tournament must incluse tournamentId parameter'};
-	else if(type === 'tournament' && !isNaN(parseInt(body.tournamentId)))
-		return {err: 'tournamentId parameter must be a string tournament slug'};
-	
-	if(type === 'event' && !body.eventId)
-		return {err: 'type event must include eventId parameter'};
-	else if(type === 'event' && isNaN(parseInt(eventId)) && !body.tournamentId)
-		return {err: 'type event with string eventId must include string tournamentId'};
-	
-	if(type === 'phase' && !body.phaseId)
-		return {err: 'type phase must include phaseId parameter'};
-	else if(type === 'phase' && isNaN(parseInt(body.phaseId)))
-		return {err: 'phaseId parameter must be an integer'};
-
-	if(type === 'phasegroup' && !body.phaseGroupId)
-		return {err: 'type phasegroup must include phaseGroupId parameter'};
-	else if(type === 'phasegroup' && isNaN(parseInt(body.phaseGroupId)))
-		return {err: 'phaseGroupId parameter must be an integer'};
-
-	return false;
-}
-
 exports.handler = async function(event, context, callback){
 	try{
 		///////////////////////////////////////////////
@@ -60,7 +27,7 @@ exports.handler = async function(event, context, callback){
 		let input = event.body ? event.body : event;
 		console.log('input:', input);
 		
-		let isError = exports.validateBody(input);
+		let isError = validateBody(input);
 		if(isError){
 			console.error(isError.err);
 			throw new Error(isError.err);
@@ -76,7 +43,7 @@ exports.handler = async function(event, context, callback){
 		let d 			 = input.d;
 		
 		if(d) require('sinon').useFakeTimers(new Date(d));
-		console.log('Current Time: %s', moment().format());
+		console.log('Current Time: %s', moment().format('YYYY-MM-DD HH:mm:ss'));
 
 		let sets = [];
 		switch(type.toLowerCase()){
@@ -117,4 +84,38 @@ exports.handler = async function(event, context, callback){
 		console.log('main error: %s', e);
 		callback(e, null);
 	}
+}
+
+
+function validateBody(body){
+	var type;
+	if(!body.type)
+		return {err: 'type is a required parameter. Accepts (TOURNAMENT|EVENT|PHASE|PHASEGROUP)'};
+	else
+		type = body.type.toLowerCase();
+
+	if(!body.amount)
+		return {err: 'amount is a required parameter. Accepts an Integer for how many minute back to search'};
+	
+	if(type === 'tournament' && !body.tournamentId)
+		return {err: 'type tournament must incluse tournamentId parameter'};
+	else if(type === 'tournament' && !isNaN(parseInt(body.tournamentId)))
+		return {err: 'tournamentId parameter must be a string tournament slug'};
+	
+	if(type === 'event' && !body.eventId)
+		return {err: 'type event must include eventId parameter'};
+	else if(type === 'event' && isNaN(parseInt(body.eventId)) && !body.tournamentId)
+		return {err: 'type event with string eventId must include string tournamentId'};
+	
+	if(type === 'phase' && !body.phaseId)
+		return {err: 'type phase must include phaseId parameter'};
+	else if(type === 'phase' && isNaN(parseInt(body.phaseId)))
+		return {err: 'phaseId parameter must be an integer'};
+
+	if(type === 'phasegroup' && !body.phaseGroupId)
+		return {err: 'type phasegroup must include phaseGroupId parameter'};
+	else if(type === 'phasegroup' && isNaN(parseInt(body.phaseGroupId)))
+		return {err: 'phaseGroupId parameter must be an integer'};
+
+	return false;
 }

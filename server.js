@@ -3,7 +3,7 @@
 let log = require('winston');
 let bp = require('body-parser');
 let express = require('express');
-let main = require('./main');
+let main = require('./index');
 
 let app = express();
 
