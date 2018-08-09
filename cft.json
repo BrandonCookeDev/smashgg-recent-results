@@ -32,6 +32,24 @@
 			   ]
 		   }
 		},
+
+		"smashggRecentResultsApiGateway": {
+			"Type" : "AWS::ApiGateway::Method",
+			"Properties" : {
+				"ApiKeyRequired" : "false",
+				"AuthorizationType" : "",
+				"AuthorizerId" : "",
+				"HttpMethod" : "POST",
+				"Integration" : "",
+				"MethodResponses" : [ ],
+				"OperationName" : "smashgg-recent-results",
+				"RequestModels" : { },
+				"RequestParameters" : { },
+				"RequestValidatorId" : "",
+				"ResourceId" : "",
+				"RestApiId" : ""
+			}
+		},
 		
 		"lambdaFunction": {
 		  "Type": "AWS::Lambda::Function",
@@ -50,21 +68,7 @@
 			"Timeout": 5,
 			"KmsKeyArn": "",
 			"Environment": {
-			  "Variables": {
-				"redisUrl": { 
-					"Fn::GetAtt": [
-						"redisCacheCluster",
-						"RedisEndpoint.Address"
-					]	
-				},
-				"redisPort": {
-					"Fn::GetAtt": [
-						"redisCacheCluster",
-						"RedisEndpoint.Port"
-					]
-				},
-				"redisTTL": { "Ref": "redisTTL" }
-			  }
+			  "Variables": { }
 			},
 			"VpcConfig": {
 			  "SecurityGroupIds": [ ],
