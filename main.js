@@ -16,7 +16,8 @@ exports.handler = async function(event, context, callback){
 		///////////////////////////////////////////////
 		var handle = function(e){
 			console.log('uncaught error: %s', e);
-            callback(e, null);
+			let ret = formatApiGatewayResponse(500, e.message);
+			callback(null, ret);
             process.exit(1);
 		}
 		process.on('unhandledRejection', handle);
@@ -30,7 +31,9 @@ exports.handler = async function(event, context, callback){
 		let isError = validateBody(input);
 		if(isError){
 			console.error(isError.err);
-			throw new Error(isError.err);
+			let ret = formatApiGatewayResponse(500, isError.err);
+			callback(null, ret);
+			return false;
 		}
 
 		//Parse input
@@ -78,16 +81,31 @@ exports.handler = async function(event, context, callback){
 		}
 
 		console.log('got sets', sets.length);
-		callback(null, sets);
+		let ret = formatApiGatewayResponse(200, sets);
+		callback(null, ret);
 		return true;
 	} catch(e){
 		console.log('main error: %s', e);
-		callback(e, null);
+		let ret = formatApiGatewayResponse(500, e.message);
+		callback(null, ret);
 	}
+}
+
+function formatApiGatewayResponse(code, body){
+    let response = {
+        statusCode: code,
+        headers: {
+            "x-custom-header" : "my custom header value",
+            "Access-Control-Allow-Origin": "*"
+        },
+        body: JSON.stringify(body)
+    };
+    return response;
 }
 
 
 function validateBody(body){
+	console.log('Validating body: %s', JSON.stringify(body));
 	var type;
 	if(!body.type)
 		return {err: 'type is a required parameter. Accepts (TOURNAMENT|EVENT|PHASE|PHASEGROUP)'};
