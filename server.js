@@ -3,15 +3,16 @@
 let log = require('winston');
 let bp = require('body-parser');
 let express = require('express');
-let main = require('./index');
+let main = require('./main');
 
 let app = express();
 
 app.use(bp.urlencoded());
 app.use(bp.json());
 
-app.post('/recent-results', async function(req, res){
+app.post('/recent-results', function(req, res){
 	try{
+		log.info(req.body);
 		var error = function(e){
 			log.error(e);
 			return res.status(500).send(e.message);
@@ -32,5 +33,5 @@ let port = process.env.PORT || '8081';
 app.listen(port, function(err){
 	if(err)
 		log.error('Error spinning up express: %s', e);
-	log.info('Server now listening on %s', port);
+	log.info('Server now listening on ' + port);
 });
