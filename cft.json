@@ -5,9 +5,21 @@
 
 	},
 	"Parameters": {
-		"redisTTL":{
+		"codeS3Bucket": {
 			"Type": "String",
-			"Default": ""
+			"Description": "S3 Bucket in which the code for the Lambda is stored"
+		},
+		"codeS3Key":{
+			"Type": "String",
+			"Description": "Key in the S3 bucket that points to the code to be deployed on Lambda"
+		},
+		"codeS3ObjectVersion": {
+			"Type": "String",
+			"Description": "Version of the code to be deployed to Lambda"
+		},
+		"codeS3ZipFile": {
+			"Type": "String",
+			"Description": "Name of the Zip File to be ported to Lambda"
 		}
 	},
 	"Mappings": {
@@ -18,7 +30,7 @@
 	},
 	"Resources": {
 				
-		"lambdaRole": {
+		"smashggRecentResultsLambdaRole": {
 		   "Type": "AWS::IAM::Role",
 		   "Properties": {
 			  "AssumeRolePolicyDocument": { 
@@ -26,32 +38,25 @@
 			   },
 			  "Path": "",
 			  "Policies": [ 
-				{
-					
-				}
+					{
+						"Sid": "CreateFunctionPermissions",
+            "Effect": "Allow",
+            "Action": [
+								"lambda:ListFunctions",
+								"lambda:CreateFunction",
+								"lambda:InvokeFunction",
+								"cloudwatch:GetMetricStatistics",
+								"cloudwatchlog:DescribeLogGroups",
+                "cloudwatchlog:DescribeLogStreams",
+                "cloudwatchlog:GetLogEvents"
+            ],
+            "Resource": "*"
+					}
 			   ]
 		   }
 		},
 
-		"smashggRecentResultsApiGateway": {
-			"Type" : "AWS::ApiGateway::Method",
-			"Properties" : {
-				"ApiKeyRequired" : "false",
-				"AuthorizationType" : "",
-				"AuthorizerId" : "",
-				"HttpMethod" : "POST",
-				"Integration" : "",
-				"MethodResponses" : [ ],
-				"OperationName" : "smashgg-recent-results",
-				"RequestModels" : { },
-				"RequestParameters" : { },
-				"RequestValidatorId" : "",
-				"ResourceId" : "",
-				"RestApiId" : ""
-			}
-		},
-		
-		"lambdaFunction": {
+		"smasggRecentResultsLambda": {
 		  "Type": "AWS::Lambda::Function",
 		  "Properties": {
 			"Code": {
@@ -63,7 +68,7 @@
 			"Handler": "main.handler",
 			"Role": { "Ref": "lambdaRole" },
 			"Runtime": "Node8.10",
-			"FunctionName": "smashgg-recently-finished-sets",
+			"FunctionName": "smashgg-recent-results",
 			"MemorySize": 128,
 			"Timeout": 5,
 			"KmsKeyArn": "",
@@ -76,6 +81,45 @@
 			},
 			"Description": "Lambda function to fetch sets that were recently completed in a smashgg tournament or event"
 		  }
+		},
+
+		"smashggRecentResultsApi": {
+			"Type": "AWS::ApiGateway::RestApi",
+			"DependsOn": ["smashggRecentResultsLambda"],
+			"Properties": {
+				"Name": "smashgg-recent-results"
+			}
+		},
+
+		"smashggRecentResultsApiMethod": {
+			"Type" : "AWS::ApiGateway::Method",
+			"DependsOn": ["smashggRecentResultsApi", "smashggRecentResultsLambda"],
+			"Properties" : {
+				"ApiKeyRequired" : "false",
+				"AuthorizationType" : "",
+				"AuthorizerId" : "",
+				"Integration": {
+					"Type": "AWS",
+					"IntegrationHttpMethod": "POST",
+					"Uri": {"Fn::Join" : ["", ["arn:aws:apigateway:", {"Ref": "AWS::Region"}, ":lambda:path/2015-03-31/functions/", {"Fn::GetAtt": ["Lambda", "Arn"]}, "/invocations"]]}
+				},
+				"MethodResponses" : [ ],
+				"OperationName" : "smashgg-recent-results",
+				"RequestModels" : { },
+				"RequestParameters" : { },
+				"RequestValidatorId" : "",
+				"ResourceId" : "",
+				"RestApiId": {"Ref": "smashggRecentResultsApi"}
+			}
+		},
+
+		"RestApiDeployment": {
+			"Type": "AWS::ApiGateway::Deployment",
+			"DependsOn": ["smashggRecentResultsApi", "smashggRecentResultsApiMethod", "smashggRecentResultsLambda"],
+			"Properties": {
+				"RestApiId": {"Ref": "smashggRecentResultsApiGateway"},
+				"StageName": "v1"
+			}
 		}
 		
 	},
