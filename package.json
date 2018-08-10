@@ -9,20 +9,19 @@
   "author": "Brandon Cooke",
   "license": "ISC",
   "dependencies": {
-    "bluebird": "^3.5.1",
     "body-parser": "^1.18.3",
     "dotenv": "^6.0.0",
     "express": "^4.16.3",
     "lodash": "^4.17.10",
     "moment": "^2.22.2",
     "p-map": "^1.2.0",
-    "request": "^2.87.0",
-    "request-promise": "^4.2.2",
     "sinon": "^6.1.4",
     "smashgg.js": "^2.3.8",
     "winston": "^3.0.0"
   },
   "devDependencies": {
-    "chai": "^4.1.2"
+    "chai": "^4.1.2",
+    "request": "^2.87.0",
+    "request-promise": "^4.2.2"
   }
 }

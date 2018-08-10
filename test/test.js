@@ -3,7 +3,7 @@
 let sinon = require('sinon');
 let moment = require('moment');
 let {Tournament, Event} = require('smashgg.js');
-let main = require('./main');
+let main = require('../main');
 
 (async function(){
 	try{
@@ -11,7 +11,7 @@ let main = require('./main');
 		let t = await Tournament.getTournament('ceo-2016')
 		let tournamentDate = moment(t.getStartTime()).add(30, 'minutes').toDate();
 		
-		clock = sinon.useFakeTimers(tournamentDate);
+		//clock = sinon.useFakeTimers(tournamentDate);
 
 		let input = {
 			body:{
@@ -25,7 +25,7 @@ let main = require('./main');
 
 		let value = await runmain(input);
 
-		clock.restore();
+		//clock.restore();
 
 		let e = await Event.getEvent(121480);
 		let eventDate = moment(e.getStartTime()).add(30, 'minutes').toDate();

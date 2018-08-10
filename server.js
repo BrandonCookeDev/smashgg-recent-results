@@ -21,7 +21,7 @@ app.post('/recent-results', async function(req, res){
 			if(err)
 				return error(err)
 
-			return res.status(200).send(val);
+			return res.status(200).send(val.body);
 		})
 	} catch(e){
 		error(e);
