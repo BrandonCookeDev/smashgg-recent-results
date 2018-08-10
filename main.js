@@ -25,8 +25,9 @@ exports.handler = async function(event, context, callback){
 		///////////////////////////////////////////////
 
 		//await helper.init();
+		console.log('event.body:', event.body);
 		let input = event.body ? event.body : event;
-		console.log('input:', input);
+		console.log('transformed:', input);
 
 		if(typeof(input) === 'string')
 			input = JSON.parse(input);
