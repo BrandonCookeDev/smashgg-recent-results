@@ -60,10 +60,10 @@
 		  "Type": "AWS::Lambda::Function",
 		  "Properties": {
 			"Code": {
-			  "S3Bucket": "",
-			  "S3Key": "",
-			  "S3ObjectVersion": "",
-			  "ZipFile": ""
+			  "S3Bucket": {"Ref": "codeS3Bucket"},
+			  "S3Key": {"Ref": "codeS3Key"},
+			  "S3ObjectVersion": {"Ref": "codeS3ObjectVersion"},
+			  "ZipFile": {"Ref": "codeS3ZipFile"}
 			},
 			"Handler": "main.handler",
 			"Role": { "Ref": "lambdaRole" },
