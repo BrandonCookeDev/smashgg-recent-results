@@ -1,0 +1,29 @@
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Document</title>
+</head>
+<body>
+	<!--
+	<select name="type" id="typeSelect">
+		<option>TOURNAMENT</option>
+		<option>EVENT</option>
+		<option>PHASE</option>
+		<option>PHASEGROUP</option>
+	</select><br/>
+	-->
+	<input type="text" name="type" id="typeText" placeholder="type"><br/>
+	<input type="text" name="tournamentId" id="tournamentIdText" placeholder="tournamentId"><br/>
+	<input type="text" name="eventId" id="eventIdText" placeholder="eventId"><br/>
+	<input type="text" name="phaseId" id="phaseIdText" placeholder="phaseId"><br/>
+	<input type="text" name="groupId" id="groupIdText" placeholder="groupId"><br/>
+	<button onclick="run()" value="run">Run</button>
+
+	<script src="lib/firebase.js"></script>
+	<script src="lib/moment.js"></script>
+	<script src="lib/smashgg-promise.js"></script>
+	<script src="./smashggRecentResults.js" ></script>
+</body>
+</html>
