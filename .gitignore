@@ -3,4 +3,4 @@ node_modules
 .vscode/
 *.zip
 
-dist/smashggRecentResults.js
+smashggRecentResults.js

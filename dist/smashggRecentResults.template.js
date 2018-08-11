@@ -1,8 +1,8 @@
 'use strict';
 
-import moment from '../lib/moment';
-import smashgg from '../lib/smashgg-promise';
-import firebase from '../lib/firebase';
+//import moment from './lib/moment';
+//import smashgg from './lib/smashgg-promise';
+//import firebase from './lib/firebase';
 
 var stale = {};
 var completed = {};
@@ -20,11 +20,28 @@ var config = {
 };
 firebase.initializeApp(config);
 
+function run(){
+	let type = document.getElementById('typeText').value;
+	let tournamentId = document.getElementById('tournamentIdText').value;
+	let eventId = document.getElementById('eventIdText').value;
+	let phaseId = document.getElementById('phaseIdText').value;
+	let groupId = document.getElementById('groupIdText').value;
+
+	let options = {
+		type: type,
+		tournamentId: tournamentId,
+		eventId: eventId,
+		phaseId: phaseId,
+		groupId: groupId
+	}
+	
+	init(options);
+}
 
 function init(options){
 	// parse options
 	let type = options.type || '';
-	let amount = options.amount;
+	let amount = options.amount || 5;
 	let checkPeriod = options.checkPeriod || 120000; //default 2 minutes
 	let tournamentId = options.tournamentId;
 	let eventId = options.eventId;
@@ -37,26 +54,32 @@ function init(options){
 	let setsPromise;
 	switch(type.toLowerCase()){
 	case 'tournament':
-		setsPromise = getTournamentSets;
+		setsPromise = getTournamentSets(tournamentId);
 		break;
 	case 'event':
-		setsPromise = getEventSets;
+		setsPromise = getEventSets(eventId, tournamentId);
 		break;
 	case 'phase':
-		setsPromise = getPhaseSets;
+		setsPromise = getPhaseSets(phaseId);
 		break;
 	case 'phasegroup':
-		setsPromise = getPhaseGroupSets;
+		setsPromise = getPhaseGroupSets(groupId);
 		break;
 	default: 
 		console.error('type may only be (TOURNAMENT|EVENT|PHASE|PHASEGROUP)');
 		return;
 	}
 
-	setsPromise()
+	setsPromise
 		.then(storeSetsInCache)
 		.then(setCallbackFunctions)
 		.catch(console.error);
+
+	setInterval(function(){
+		moveStaleCompletedSets();
+		moveCompletedNonStaleSets();
+		moveStaleBackToCompleted();
+	}, checkPeriod);
 }
 
 /** SET FIREBASE EVENT HANDLING **/
@@ -174,14 +197,16 @@ function getEventSets(eventId, tournamentId){
 		return;
 	}
 
-	return smashgg.getEvent(eventId, tournamentId)
-		.then(event => { 
-			return event.getEventPhaseGroups()
-		})
+	return smashgg.getEvent(tournamentId, eventId)
+		.then(event => { return event.getEventPhaseGroups() })
 		.then(groups => {
 			let promises = groups.map(group => {
-				return group.getMatches();
+				return group.getMatches()
+					.then(sets => { 
+						return sets; 
+					})
 			})
+			return Promise.all(promises);
 		})
 		.catch(console.error);
 }
@@ -194,7 +219,7 @@ function getPhaseSets(phaseId){
 
 	return smashgg.getPhase(phaseId)
 		.then(phase => {
-			return phase.getPhaseSets()
+			return phase.getPhaseSets();
 		})
 		.catch(console.error);
 }

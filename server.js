@@ -7,6 +7,7 @@ let main = require('./main');
 
 let app = express();
 
+app.use(require('cors'));
 app.use(bp.urlencoded());
 app.use(bp.json());
 
