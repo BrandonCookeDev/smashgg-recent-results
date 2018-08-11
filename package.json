@@ -13,10 +13,12 @@
     "cors": "^2.8.4",
     "dotenv": "^6.0.0",
     "express": "^4.16.3",
+    "handlebars": "^4.0.11",
     "lodash": "^4.17.10",
     "moment": "^2.22.2",
     "p-map": "^1.2.0",
     "sinon": "^6.1.4",
+    "smashgg-promise": "^1.1.1",
     "smashgg.js": "^2.3.8",
     "winston": "^3.0.0"
   },

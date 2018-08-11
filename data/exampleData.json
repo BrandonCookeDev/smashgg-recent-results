@@ -1,0 +1,196 @@
+{
+	"entities" : {
+	  "seeds" : [ {
+		"checkInState" : 4,
+		"createdAt" : 1526565520,
+		"entrantId" : 2555,
+		"groupSeedNum" : 19,
+		"id" : 2596,
+		"isBye" : false,
+		"isDisqualified" : true,
+		"isEligible" : false,
+		"isFinal" : false,
+		"isSeeded" : true,
+		"losses" : 0,
+		"mutations" : {
+		  "entrants" : {
+			"2555" : {
+			  "id" : 2555,
+			  "initialSeedNum" : 72,
+			  "name" : "SmasherAV",
+			  "participantIds" : [ 2312 ],
+			  "playerIds" : {
+				"2312" : 1880
+			  }
+			}
+		  },
+		  "participants" : {
+			"2312" : {
+			  "contactInfo" : {
+				"city" : "",
+				"state" : ""
+			  },
+			  "gamerTag" : "SmasherAV",
+			  "id" : 2312,
+			  "playerId" : 1880
+			}
+		  },
+		  "players" : {
+			"1880" : {
+			  "gamerTag" : "SmasherAV",
+			  "id" : 1880
+			}
+		  }
+		},
+		"phaseGroupId" : 5778,
+		"phaseId" : 5206,
+		"phaseLinkId" : 711,
+		"placement" : 17,
+		"seedNum" : 72,
+		"unverified" : false,
+		"updatedAt" : 1528314935
+	  }, {
+		"checkInState" : 4,
+		"createdAt" : 1526565582,
+		"entrantId" : 2562,
+		"groupSeedNum" : 9,
+		"id" : 2603,
+		"isBye" : false,
+		"isDisqualified" : true,
+		"isEligible" : false,
+		"isFinal" : false,
+		"isSeeded" : true,
+		"losses" : 0,
+		"mutations" : {
+		  "entrants" : {
+			"2562" : {
+			  "id" : 2562,
+			  "initialSeedNum" : 35,
+			  "name" : "SmasherBC",
+			  "participantIds" : [ 2450 ],
+			  "playerIds" : {
+				"2450" : 1895
+			  }
+			}
+		  },
+		  "participants" : {
+			"2450" : {
+			  "contactInfo" : {
+				"city" : "",
+				"state" : ""
+			  },
+			  "gamerTag" : "SmasherBC",
+			  "id" : 2450,
+			  "playerId" : 1895
+			}
+		  },
+		  "players" : {
+			"1895" : {
+			  "gamerTag" : "SmasherBC",
+			  "id" : 1895
+			}
+		  }
+		},
+		"phaseGroupId" : 5778,
+		"phaseId" : 5206,
+		"phaseLinkId" : 711,
+		"placement" : 9,
+		"seedNum" : 35,
+		"unverified" : false,
+		"updatedAt" : 1528314935
+	  } ],
+	  "sets" : {
+		"bestOf" : 3,
+		"bracketId" : "5b183c38bb109",
+		"completedAt" : 1528314936,
+		"createdAt" : 1528314936,
+		"displayRound" : -1,
+		"entrant1Id" : 2562,
+		"entrant1PrereqCondition" : "loser",
+		"entrant1PrereqId" : 8317,
+		"entrant1PrereqStr" : "loser of E",
+		"entrant1PrereqType" : "set",
+		"entrant1Present" : false,
+		"entrant1Score" : -1,
+		"entrant2Id" : 2555,
+		"entrant2PrereqCondition" : "winner",
+		"entrant2PrereqId" : 8371,
+		"entrant2PrereqStr" : "winner of CK",
+		"entrant2PrereqType" : "set",
+		"entrant2Present" : false,
+		"entrant2Score" : -1,
+		"eventId" : 4088,
+		"eventType" : 1,
+		"expand" : [ "setTask", "seeds" ],
+		"fullRoundText" : "Losers Round 1",
+		"hasPlaceholder" : false,
+		"id" : 8379,
+		"identifier" : "W",
+		"isGF" : false,
+		"isLast" : false,
+		"isPublished" : true,
+		"isTiebreak" : false,
+		"lOverallPlacement" : 65,
+		"lPlacement" : 17,
+		"loserId" : 2555,
+		"midRoundText" : "Losers 1",
+		"mutations" : {
+		  "matchDisplay" : {
+			"8379" : {
+			  "advancementData" : [ {
+				"fullRoundText" : "Losers Round 2",
+				"id" : 8384,
+				"unreachable" : false
+			  } ],
+			  "headerData" : {
+				"bracketInfo" : "Smash 64 Singles Online Event Check-in Test - Bracket - Pool A1",
+				"records" : {
+				  "2555" : "0 - 2",
+				  "2562" : "2 - 2"
+				}
+			  },
+			  "updatedAtMicro" : 1.528314948477E9
+			}
+		  },
+		  "phaseGroups" : {
+			"5778" : {
+			  "displayIdentifier" : "A1",
+			  "groupTypeId" : 2,
+			  "id" : 5778,
+			  "identifier" : "1",
+			  "phaseId" : 5206,
+			  "state" : 2
+			}
+		  },
+		  "phases" : {
+			"5206" : {
+			  "eventId" : 4088,
+			  "id" : 5206,
+			  "name" : "Bracket",
+			  "state" : 2
+			}
+		  }
+		},
+		"originalRound" : -4,
+		"phaseGroupId" : 5778,
+		"phaseId" : 5206,
+		"round" : -1,
+		"roundDivision" : 96,
+		"setGamesType" : 1,
+		"shortRoundText" : "L1",
+		"state" : 3,
+		"totalGames" : 5,
+		"type" : 1,
+		"unreachable" : false,
+		"updatedAt" : 1528314947,
+		"updatedAtMicro" : 1.528314946987E9,
+		"videogameId" : 4,
+		"wOverallPlacement" : 49,
+		"wPlacement" : 13,
+		"winnerId" : 2562
+	  }
+	},
+	"result" : 8379,
+	"resultEntity" : "sets"
+  }
+  
