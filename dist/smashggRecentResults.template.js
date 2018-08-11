@@ -141,7 +141,13 @@ function moveStaleBackToCompleted(){
 	let now = moment();
 	for(let id in stale){
 		let set = stale[id];
+		let then = moment.unix(set.completedAt);
+		let diff = moment.duration(now.diff(then));
 
+		if(diff.minutes() < STALE_CEILING){
+			complete[id] = set;
+			delete stale[id];
+		}
 	}
 }
 
