@@ -68,7 +68,7 @@ class Tournament{
                     return resolve(new Tournament(name, expandsObj, data));
                 })
                 .catch(function(err){
-                    console.error('Smashgg Tournament: ' + err);
+                    console.error('Smashgg Tournament: ' + err.message);
                     return reject(err);
                 })
         })
@@ -266,7 +266,7 @@ class Event{
                     return resolve(new Event(tournamentName, eventName, expandsObj, data, null));
                 })
                 .catch(function(err){
-                    console.error('Smashgg Tournament: ' + err);
+                    console.error('Smashgg Event: ' + err.message);
                     return reject(err);
                 })
         })
@@ -283,7 +283,7 @@ class Event{
                     return resolve(new Event(tournamentName, data.name, null, data, eventId));
                 })
                 .catch(function(err){
-                    console.error('Smashgg Tournament: ' + err);
+                    console.error('Smashgg Event: ' + err.message);
                     return reject(err);
                 })
         })
@@ -367,7 +367,7 @@ class Phase{
                     return resolve(new Phase(id, expandsObj, data));
                 })
                 .catch(function(err){
-                    console.error('Smashgg Tournament: ' + err);
+                    console.error('Smashgg Phase: ' + err.message);
                     return reject(err);
                 })
         })
@@ -488,7 +488,7 @@ class PhaseGroup{
                     return resolve(new PhaseGroup(id, expandsObj, data));
                 })
                 .catch(function(err){
-                    console.error('Smashgg Tournament: ' + err);
+                    console.error('Smashgg Phase: ' + err.message);
                     return reject(err);
                 })
         })
@@ -517,44 +517,36 @@ class PhaseGroup{
     getMatches(){
         var ThisPhaseGroup = this;
         return new Promise(function(resolve, reject){
-            var promises = [];
-            ThisPhaseGroup.data.entities.sets.forEach(set => {
-                if (!set.entrant1Id || !set.entrant2Id)
-                    return; // HANDLES BYES
-                var p = new Promise(function(resolve, reject){
-                    let winnerId = 
+            let sets = ThisPhaseGroup.data.entities.sets.map(set => {
+                //var p = new Promise(function(resolve, reject){
+                let isComplete = set.completedAt != null;
+                
+                let winnerId = !isComplete ? null : 
                         set.entrant1Score > set.entrant2Score ? 
                             set.entrant1Id : 
                             set.entrant2Id;
-                    let loserId = 
-                        winnerId != set.entrant1Id ? 
-                            set.entrant1Id : set.entrant2Id;
+                    
+                let loserId = !isComplete ? null : 
+                    winnerId != set.entrant1Id ? 
+                        set.entrant1Id : set.entrant2Id;
 
-                    ThisPhaseGroup.findWinnerLoserByParticipantIds(winnerId, loserId)
-                        .then(setPlayers => {
-                            if (!setPlayers.winnerPlayer || !setPlayers.loserPlayer)
-                                return reject('Both winner and loser player must be populated'); 
-                                // HANDLES Error of some sort
-
-                            let S = new Match(
-                                set.id, 
-                                set.eventId, 
-                                set.fullRoundText, 
-                                setPlayers.winnerPlayer, 
-                                setPlayers.loserPlayer,
-                                JSON.stringify(set)
-                            );
-                            return resolve(S);
-                        })
-                        .catch(reject);
-                    })
-                promises.push(p);
-            });
-
-            Promise.all(promises)
-                .then(resolve)
-                .catch(console.error);
-        })
+                let S = new Set(
+                    set.id, 
+                    set.eventId, 
+                    set.fullRoundText, 
+                    set.entrant1,
+                    set.entrant2,
+                    isComplete,
+                    set.entrant1Score,
+                    set.entrant2Score,
+                    winnerId,
+                    loserId,
+                    JSON.stringify(set)
+                );
+                return S;
+            })
+            return resolve(sets);
+        });
     }
 
     findWinnerLoserByParticipantIds(winnerId, loserId){
@@ -597,40 +589,44 @@ class PhaseGroup{
     }
 }
 
-/** Match - Represents a tournament set */
-class Match{
-    constructor(id, eventId, round, WinnerPlayer, LoserPlayer, data){
-        if(!id)
-            throw new Error('Id for Set cannot be null');
-        if(!eventId)
-            throw new Error('Event Id for Set cannot be null');
-        if(!round)
-            throw new Error('Round for Set cannot be null');
-        if(!WinnerPlayer && !(WinnerPlayer instanceof Player))
-            throw new Error('Winner Player for Set cannot be null, and must be an instance of Player.js');
-        if(!LoserPlayer && !(LoserPlayer instanceof Player))
-            throw new Error('Loser Player for Set cannot be null, and must be an instance of Player.js');
+/** Sets */
+class Set{
+    constructor(id, eventId, round, player1, player2, isComplete=false, score1=0, score2=0, winnerId, loserId, data){
+		if(!id)
+			throw new Error('Id for Set cannot be null');
+		if(!eventId)
+			throw new Error('Event Id for Set cannot be null');
+		if(!round)
+			throw new Error('Round for Set cannot be null');
+		if(!player1 && !(player1 instanceof Player))
+			throw new Error('Winner Player for Set cannot be null, and must be an instance of Player');
+		if(!player2 && !(player2 instanceof Player))
+			throw new Error('Loser Player for Set cannot be null, and must be an instance of Player');
 
-        this.id = id;
-        this.eventId = eventId;
-        this.round = round;
-        this.WinnerPlayer = WinnerPlayer;
-        this.LoserPlayer = LoserPlayer;
+		this.id = id;
+		this.eventId = eventId;
+		this.round = round;
+		this.player1 = player1;
+		this.player2 = player2;
+		this.score1 = score1;
+		this.score2 = score2;
+		this.isComplete = isComplete;
+		this.winnerId = winnerId;
+		this.loserId = loserId;
 
-        if(data)
-            this.data = JSON.parse(data);
+		this.data = data;
     }
 
     getRound(){
         return this.round;
     }
 
-    getWinner(){
-        return this.WinnerPlayer;
+    getWinnerId(){
+        return this.winnerId;
     }
 
-    getLoser(){
-        return this.LoserPlayer;
+    getLoserId(){
+        return this.loserId;
     }
 
     getGames(){
@@ -642,11 +638,11 @@ class Match{
     }
 
     getWinnerScore(){
-        return this.data.entrant1Score > this.data.entrant2Score ? this.data.entrant1Score : this.data.entrant2Score;
+        return this.score1 > this.score2 ? this.score1 : this.score2;
     }
 
     getLoserScore(){
-        return this.data.entrant1Score < this.data.entrant2Score ? this.data.entrant1Score : this.data.entrant2Score;
+        return this.score1 < this.score2 ? this.score2 : this.score1;
     }
 
     getBracketId(){
@@ -661,12 +657,22 @@ class Match{
         return this.data.phaseGroupId;
     }
 
+    /*
     getWinnersTournamentPlacement(){
         return this.WinnerPlayer.getFinalPlacement();
     }
 
     getLosersTournamentPlacement(){
         return this.LoserPlayer.getFinalPlacement();
+    }
+    */
+
+    getCompletedAt(){
+        return this.data.completedAt;
+    }
+
+    getStartedAt(){
+        return this.data.startedAt;
     }
 }
 

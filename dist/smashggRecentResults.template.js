@@ -181,9 +181,7 @@ function getTournamentSets(tournamentId){
 		return;
 	}
 	return smashgg.getTournament(tournamentId)
-		.then(tourney => {
-			return tourney.getAllMatches();
-		})
+		.then(tourney => { return tourney.getAllMatches(); })
 		.catch(console.error);
 }
 
@@ -202,9 +200,6 @@ function getEventSets(eventId, tournamentId){
 		.then(groups => {
 			let promises = groups.map(group => {
 				return group.getMatches()
-					.then(sets => { 
-						return sets; 
-					})
 			})
 			return Promise.all(promises);
 		})
@@ -218,9 +213,7 @@ function getPhaseSets(phaseId){
 	}
 
 	return smashgg.getPhase(phaseId)
-		.then(phase => {
-			return phase.getPhaseSets();
-		})
+		.then(phase => { return phase.getPhaseSets(); })
 		.catch(console.error);
 }
 
@@ -231,8 +224,6 @@ function getPhaseGroupSets(groupId){
 	}
 
 	return smashgg.getPhaseGroup(groupId)
-		.then(group => { 
-			return group.getMatches();
-		})
+		.then(group => { return group.getMatches(); })
 		.catch(console.error);
 }
