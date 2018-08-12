@@ -51,26 +51,26 @@ function init(options){
 	STALE_CEILING = amount;
 
 	// one time call to db to get all sets from Tournament-X
-	let setsPromise;
+	let setIdsPromise;
 	switch(type.toLowerCase()){
 	case 'tournament':
-		setsPromise = getTournamentSets(tournamentId);
+		setIdsPromise = getTournamentSetIds(tournamentId);
 		break;
 	case 'event':
-		setsPromise = getEventSets(eventId, tournamentId);
+		setIdsPromise = getEventSetIds(eventId, tournamentId);
 		break;
 	case 'phase':
-		setsPromise = getPhaseSets(phaseId);
+		setIdsPromise = getPhaseSetIds(phaseId);
 		break;
 	case 'phasegroup':
-		setsPromise = getPhaseGroupSets(groupId);
+		setIdsPromise = getPhaseGroupSetIds(groupId);
 		break;
 	default: 
 		console.error('type may only be (TOURNAMENT|EVENT|PHASE|PHASEGROUP)');
 		return;
 	}
 
-	setsPromise
+	setIdsPromise
 		.then(storeSetsInCache)
 		.then(setCallbackFunctions)
 		.catch(console.error);
@@ -83,19 +83,19 @@ function init(options){
 }
 
 /** SET FIREBASE EVENT HANDLING **/
-function storeSetsInCache(sets){
-	sets.forEach(set => {
-		incomplete[set.getId()] = set;
+function storeSetsInCache(ids){
+	ids.forEach(id => {
+		incomplete[id] = {};
 	})
-	return sets;
+	return ids;
 }
 
-function setCallbackFunctions(sets){
-	sets.forEach(set => {
-		let thisSet = firebase.database().ref('/tournament/set/' + set.id);
+function setCallbackFunctions(ids){
+	ids.forEach(id => {
+		let thisSet = firebase.database().ref('/tournament/set/' + id);
 		thisSet.on('value', smashggSetCallback);
 	})
-	return sets;
+	return ids;
 }
 
 function smashggSetCallback(snapshot){
@@ -175,17 +175,17 @@ function moveStaleBackToCompleted(){
 }
 
 /** SET COLLECTION **/
-function getTournamentSets(tournamentId){
+function getTournamentSetId(tournamentId){
 	if(!tournamentId) {
 		console.error('type Tournament must include a tournamentId');
 		return;
 	}
 	return smashgg.getTournament(tournamentId)
-		.then(tourney => { return tourney.getAllMatches(); })
+		.then(tourney => { return tourney.getAllMatcheIds(); })
 		.catch(console.error);
 }
 
-function getEventSets(eventId, tournamentId){
+function getEventSetIds(eventId, tournamentId){
 	if(!eventId){
 		console.error('type event must include an eventId');
 		return;
@@ -196,34 +196,33 @@ function getEventSets(eventId, tournamentId){
 	}
 
 	return smashgg.getEvent(tournamentId, eventId)
-		.then(event => { return event.getEventPhaseGroups() })
-		.then(groups => {
-			let promises = groups.map(group => {
-				return group.getMatches()
-			})
-			return Promise.all(promises);
-		})
+		.then(event => { return event.getEventMatchIds(); })
 		.catch(console.error);
 }
 
-function getPhaseSets(phaseId){
+function getPhaseSetIds(phaseId){
 	if(!phaseId){
 		console.error('type phase must include a phaseId');
 		return;
 	}
 
 	return smashgg.getPhase(phaseId)
-		.then(phase => { return phase.getPhaseSets(); })
+		.then(phase => { return phase.getPhaseMatchIds(); })
 		.catch(console.error);
 }
 
-function getPhaseGroupSets(groupId){
+function getPhaseGroupSetIds(groupId){
 	if(!groupId){
 		console.error('type phasegroup must include a groupId');
 		return;
 	}
 
 	return smashgg.getPhaseGroup(groupId)
-		.then(group => { return group.getMatches(); })
+		.then(group => { return group.getMatchIds(); })
 		.catch(console.error);
 }
+
+document.getElementById('typeText').value = 'event';
+document.getElementById('tournamentIdText').value = 'ceo-2016';
+document.getElementById('eventIdText').value = 'melee-singles';
+//getEventSetIds('melee-singles', 'ceo-2016').then(console.log);
