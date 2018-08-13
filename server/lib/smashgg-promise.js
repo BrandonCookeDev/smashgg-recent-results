@@ -1,4 +1,4 @@
-var smashgg = Object;
+var smashgg = new Object();
 
 const API_URL = 'https://i9nvyv08rj.execute-api.us-west-2.amazonaws.com/prod/smashgg-lambda';
 
@@ -150,14 +150,17 @@ class Tournament{
     }
 
     getAllMatchIds(){
-        return this.getAllEvents()
-            .then(events => {
-                let promises = events.map(event => {
-                    return event.getEventMatchIds()
+        var promises = this.data.entities.groups.map(group => { 
+            return PhaseGroup.get(group.id).catch(console.error); 
+        });
+        return Promise.all(promises)
+            .then(groups => { 
+                let idPromises = groups.map(group => { 
+                    return group.getMatchIds(); 
                 })
-                return Promise.all(promises)
-                    .then(idArrays => {
-                        return idArrays.flatten();
+                return Promise.all(idPromises)
+                    .then(idArrays => { 
+                        return Promise.resolve(idArrays.flatten());
                     })
                     .catch(console.error);
             })
@@ -344,18 +347,21 @@ class Event{
     }
 
     getEventMatchIds(){
-        return this.getEventPhaseGroups()
-            .then(groups => {
-                let promises = groups.map(group => {
-                    return group.getMatchIds();
+        var groupPromises = this.data.entities.groups.map(group => { 
+            return PhaseGroup.get(group.id).catch(console.error); 
+        });
+        return Promise.all(groupPromises)
+            .then(groups => { 
+                let idPromises = groups.map(group => { 
+                    return group.getMatchIds(); 
                 })
-                return Promise.all(promises)
-                    .then(idArrays => {
-                        return idArrays.flatten();
+                return Promise.all(idPromises)
+                    .then(idArrays => { 
+                        return Promise.resolve(idArrays.flatten());
                     })
                     .catch(console.error);
             })
-            .catch(console.error);
+            .catch(console.error)
     }
     
     getEventPhaseGroups(){
@@ -462,14 +468,17 @@ class Phase{
     }
 
     getPhaseMatchIds(){
-        return this.getPhaseGroups()
-            .then(groups => {
-                let promises = groups.map(group => {
-                    return group.getMatchIds();
+        var promises = this.data.entities.groups.map(group => { 
+            return PhaseGroup.get(group.id).catch(console.error); 
+        });
+        return Promise.all(promises)
+            .then(groups => { 
+                let idPromises = groups.map(group => { 
+                    return group.getMatchIds(); 
                 })
-                return Promise.all(promises)
-                    .then(idArrays => {
-                        return idArrays.flatten();
+                return Promise.all(idPromises)
+                    .then(idArrays => { 
+                        return Promise.resolve(idArrays.flatten());
                     })
                     .catch(console.error);
             })
@@ -838,9 +847,9 @@ class Player{
 }
 
 /** DEFINE PROTOTYPE */
-smashgg.prototype.getTournament = Tournament.get;
-smashgg.prototype.getEvent = Event.get;
-smashgg.prototype.getPhase = Phase.get;
-smashgg.prototype.getPhaseGroup = PhaseGroup.get;
+smashgg.getTournament = Tournament.get;
+smashgg.getEvent = Event.get;
+smashgg.getPhase = Phase.get;
+smashgg.getPhaseGroup = PhaseGroup.get;
 
 module.exports = smashgg;

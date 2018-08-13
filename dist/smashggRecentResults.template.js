@@ -4,6 +4,7 @@
 //import smashgg from './lib/smashgg-promise';
 //import firebase from './lib/firebase';
 
+
 var stale = {};
 var completed = {};
 var incomplete = {};
@@ -19,6 +20,7 @@ var config = {
 	projectId: "{{firebaseProjectId}}"
 };
 firebase.initializeApp(config);
+let database = firebase.database();
 
 function run(){
 	let type = document.getElementById('typeText').value;
@@ -92,7 +94,7 @@ function storeSetsInCache(ids){
 
 function setCallbackFunctions(ids){
 	ids.forEach(id => {
-		let thisSet = firebase.database().ref('/tournament/set/' + id);
+		let thisSet = database.ref('/tournament/set/' + id).orderByKey();
 		thisSet.on('value', smashggSetCallback);
 	})
 	return ids;
