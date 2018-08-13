@@ -53,6 +53,8 @@ function init(options){
 
 	STALE_CEILING = amount;
 
+	reset();
+
 	// one time call to db to get all sets from Tournament-X
 	let setIdsPromise;
 	switch(type.toLowerCase()){
@@ -247,6 +249,28 @@ function getPhaseGroupSetIds(groupId){
 	return smashgg.getPhaseGroup(groupId)
 		.then(group => { return group.getMatchIds(); })
 		.catch(console.error);
+}
+
+function reset(){
+	
+	for(var id in incomplete){
+		let thisSet = database.ref('/tournament/set/' + id).orderByKey();
+		thisSet.off();
+	}
+
+	for(var id in completed){
+		let thisSet = database.ref('/tournament/set/' + id).orderByKey();
+		thisSet.off();
+	}
+
+	for(var id in stale){
+		let thisSet = database.ref('/tournament/set/' + id).orderByKey();
+		thisSet.off();
+	}
+
+	incomplete = {};
+	completed = {};
+	stale = {};
 }
 
 document.getElementById('typeText').value = 'event';
