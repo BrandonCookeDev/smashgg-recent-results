@@ -10,6 +10,7 @@ var completed = {};
 var incomplete = {};
 
 var STALE_CEILING = 5;
+var GROOM_INTERVAL;
 
 // Initialize Firebase
 // TODO: Replace with your project's customized code snippet
@@ -44,7 +45,7 @@ function init(options){
 	// parse options
 	let type = options.type || '';
 	let amount = options.amount || 5;
-	let checkPeriod = options.checkPeriod || 120000; //default 2 minutes
+	let checkPeriod = options.checkPeriod; //default null
 	let tournamentId = options.tournamentId;
 	let eventId = options.eventId;
 	let phaseId = options.phaseId;
@@ -77,11 +78,17 @@ function init(options){
 		.then(setCallbackFunctions)
 		.catch(console.error);
 
-	setInterval(function(){
-		moveStaleCompletedSets();
-		moveCompletedNonStaleSets();
-		moveStaleBackToCompleted();
-	}, checkPeriod);
+	// Controls the automatic grooming of Incomplete, Completed, 
+	// and Stale set sorting. Set checkPeriod to null to deactivate
+	if(!GROOM_INTERVAL && checkPeriod){
+		GROOM_INTERVAL = setInterval(() => {
+			groomCompleted();
+			groomIncomplete();
+			groomStale();
+		}, checkPeriod)
+	}
+	else if(GROOM_INTERVAL)
+		clearInterval(GROOM_INTERVAL);
 }
 
 /** SET FIREBASE EVENT HANDLING **/
@@ -102,77 +109,95 @@ function setCallbackFunctions(ids){
 
 function smashggSetCallback(snapshot){
 	let val = snapshot.val();
-
 	let set = val.entities.sets;
-	let id = set.id;
+	sort(set);
+}
+
+function sort(set){
 	let completedAt = set.completedAt;
-
-	if(completed.hasOwnProperty(id))
-		return;
-	else if(completedAt){
-		let now = moment();
-		let then = moment.unix(completedAt);
-		let diff = moment.duration(now.diff(then));
-
-		if(diff.minutes() >= STALE_CEILING)
-			stale[id] = set;
+	if(completedAt){
+		if(isStale(completedAt))
+			addToStale(set);
 		else
-			completed[id] = set;	
+			addToCompleted(set);
 	}
 	else
-		incomplete[id] = set;
+		addToIncomplete(set);
+}
+
+function addToCompleted(set){
+	let id = set.id;
+	if(completed.hasOwnProperty(id)) 
+		return;
+
+	completed[id] = set;	
+	
+	if(incomplete.hasOwnProperty(id))
+		delete incomplete[id];
+	else if(stale.hasOwnProperty(id))
+		delete stale[id];
+}
+
+function addToIncomplete(set){
+	let id = set.id;
+	if(incomplete.hasOwnProperty(id))
+		return;
+
+	incomplete[id] = set;
+	
+	if(completed.hasOwnProperty(id))
+		delete completed[id];
+	else if(stale.hasOwnProperty(id))
+		delete stale[id];
+}
+
+function addToStale(set){
+	let id = set.id;
+	if(stale.hasOwnProperty(id))
+		return;	
+	stale[id] = set;
+	
+	if(completed.hasOwnProperty(id))
+		delete completed[id];
+	else if(incomplete.hasOwnProperty[id])
+		delete incomplete[id];
+}
+
+/** TIME CALCULATION */
+function isStale(timestamp){
+	let now = moment();
+	let then = moment.unix(timestamp);
+	let diff = moment.duration(now.diff(then));
+
+	if(diff.years() > 0 || diff.months() > 0 || 
+		diff.days() > 0 || diff.hours() > 0)
+		return true;
+
+	if(diff.minutes() >= STALE_CEILING)
+		return true;
+	else
+		return false	
 }
 
 /** SET STORAGE */
-function moveStaleCompletedSets(){
-	let now = moment();
+function groomCompleted(){
 	for(let id in completed){
 		let set = completed[id];
-		let completedAt = set.entities.sets.completedAt;
-		if(!completedAt) continue;
-
-		let then = moment.unix(completedAt);
-		let diff = moment.duration(now.diff(then));
-
-		if(diff.minutes() < 0){
-			stale[id] = set;
-			delete completed[id];
-		}
+		sort(set);
 	}
 }
 
-function moveCompletedNonStaleSets(){
-	let now = moment();
-	for(let id in completed){
-		let set = completed[id];
-		let completedAt = set.entities.sets.completedAt;
-		if(!completedAt) continue;
-
-		let then = moment.unix(completedAt);
-		let diff = moment.duration(now.diff(then));
-
-		if(diff.minutes() >= 0 && diff.minutes() < STALE_CEILING){
-			complete[id] = set;
-			delete incomplete[id];
-		}
-		else if(diff.minutes() > STALE_CEILING){
-			stale[id] = set;
-			delete incomplete[id];
-		}
+function groomIncomplete(){
+	for(let id in incomplete){
+		let set = incomplete[id];
+		sort(set);
 	}
 }
 
-function moveStaleBackToCompleted(){
-	let now = moment();
+function groomStale(){
 	for(let id in stale){
 		let set = stale[id];
-		let then = moment.unix(set.completedAt);
-		let diff = moment.duration(now.diff(then));
-
-		if(diff.minutes() < STALE_CEILING){
-			complete[id] = set;
-			delete stale[id];
-		}
+		sort(set);
 	}
 }
 
@@ -225,6 +250,6 @@ function getPhaseGroupSetIds(groupId){
 }
 
 document.getElementById('typeText').value = 'event';
-document.getElementById('tournamentIdText').value = 'ceo-2016';
+document.getElementById('tournamentIdText').value = 'liva-s-api-test-do-not-mind-me';
 document.getElementById('eventIdText').value = 'melee-singles';
 //getEventSetIds('melee-singles', 'ceo-2016').then(console.log);
