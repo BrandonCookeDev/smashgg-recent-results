@@ -121,17 +121,14 @@ function setCallbackFunctions(ids){
 function smashggSetCallback(snapshot){
 	let val = snapshot.val();
 	let set = val.entities.sets;
-	sort(set);
-
-	let playerIds = [set.entrant1Id, set.entrant2Id];
-	playerIds.forEach(id => {
-		if(!id) return;
-		let thisPlayer = database.ref('/tournament/player/' + id).orderByKey();
-		thisPlayer.on('value', snapshot => {
-			let player = snapshot.val();
-			ggResults.players[player.id] = player;
- 		})
-	})
+	
+	getPlayers(set.entrant1Id, set.entrant2Id)
+		.then(players => {
+			set.player1 = players[0] || null;
+			set.player2 = players[1] || null;
+			sort(set);
+		})
+		.catch(console.error)
 }
 
 function sort(set){
@@ -267,6 +264,23 @@ function getPhaseGroupSetIds(groupId){
 
 	return smashgg.getPhaseGroup(groupId)
 		.then(group => { return group.getMatchIds(); })
+		.catch(console.error);
+}
+
+function getPlayers(){
+	let ids = Object.values(arguments);
+	ids.forEach(id => { 
+		if(!id || ggResults.players.hasOwnProperty(id))
+			ids.splice(ids.indexOf(id), 1)
+	})
+
+	return smashgg.getPlayers(ids)
+		.then(players => {
+			players.forEach(player => { 
+				ggResults.players[player.id] = player;
+			})
+			return players;
+		})
 		.catch(console.error);
 }
 

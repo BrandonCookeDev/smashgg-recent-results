@@ -45,7 +45,7 @@ class Tournament{
     constructor(name, expands, data){
         this.name = name;
         this.expands = expands;
-        this.data = JSON.parse(data);
+        this.data = JSON.parse(data).data;
     }
 
     static get(tournamentName, expands){
@@ -260,7 +260,7 @@ class Event{
         this.tournamentName = tournamentName;
         this.eventName = eventName;
         this.expands = expands;
-        this.data = JSON.parse(data);
+        this.data = JSON.parse(data).data;
     }
 
     static get(tournamentName, eventName, expands){
@@ -383,7 +383,7 @@ class Phase{
     constructor(id, expands, data){
         this.id = id;
         this.expands = expands;
-        this.data = JSON.parse(data);
+        this.data = JSON.parse(data).data;
     }
 
     static get(id, expands){
@@ -520,7 +520,7 @@ class PhaseGroup{
     constructor(id, expands, data){
         this.id = id;
         this.expands = expands;
-        this.data = JSON.parse(data);
+        this.data = JSON.parse(data).data;
     }
 
     static get(id, expands){
@@ -707,6 +707,33 @@ class Set{
 		this.data = data;
     }
 
+    static get(id){
+        let postParams = {
+            type: 'set',
+            id: id
+        }
+
+        return request('POST', API_URL, postParams)
+            .then(data => {
+                return resolve(data);
+            }) 
+            .catch(console.error);
+        
+    }
+
+    static getFromIdArray(idArray){
+        let postParams = {
+            type: 'sets',
+            idArray: idArray
+        }
+
+        return request('POST', API_URL, postParams)
+            .then(data => {
+                return data.map(set => { return resolve(set); });
+            })
+            .catch(console.error);
+    }
+
     getRound(){
         return this.round;
     }
@@ -813,6 +840,33 @@ class Player{
         }
     }
 
+    static get(id){
+        let postParams = {
+            type: 'player',
+            id: id
+        }
+
+        return request('POST', API_URL, postParams)
+            .then(data => {
+                return resolve(data);
+            }) 
+            .catch(console.error);
+        
+    }
+
+    static getFromIdArray(idArray){
+        let postParams = {
+            type: 'players',
+            idArray: idArray
+        }
+
+        return request('POST', API_URL, postParams)
+            .then(data => {
+                data.map(player => { return resolve(player); });
+            })
+            .catch(console.error);
+    }
+
     getId(){
         return this.id;
     }
@@ -851,5 +905,9 @@ smashgg.getTournament = Tournament.get;
 smashgg.getEvent = Event.get;
 smashgg.getPhase = Phase.get;
 smashgg.getPhaseGroup = PhaseGroup.get;
+smashgg.getPlayer = Player.get;
+smashgg.getPlayers = Player.getFromIdArray;
+smashgg.getMatch = Match.get;
+smashgg.getMatches = Match.getFromIdArray;
 
 module.exports = smashgg;
