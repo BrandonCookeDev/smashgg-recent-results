@@ -226,7 +226,7 @@ function groomStale(){
 }
 
 /** SET COLLECTION **/
-function getTournamentSetId(tournamentId){
+function getTournamentSetIds(tournamentId){
 	if(!tournamentId) {
 		console.error('type Tournament must include a tournamentId');
 		return;
