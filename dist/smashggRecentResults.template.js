@@ -1,13 +1,15 @@
 'use strict';
 
+let ggResults = new Object();
+
 //import moment from './lib/moment';
 //import smashgg from './lib/smashgg-promise';
 //import firebase from './lib/firebase';
 
-
-var stale = {};
-var completed = {};
-var incomplete = {};
+ggResults.stale = {};
+ggResults.completed = {};
+ggResults.incomplete = {};
+ggResults.players = {};
 
 var STALE_CEILING = 5;
 var GROOM_INTERVAL;
@@ -23,7 +25,7 @@ var config = {
 firebase.initializeApp(config);
 let database = firebase.database();
 
-function run(){
+function runRecentResultsQueryFromForm(){
 	let type = document.getElementById('typeText').value;
 	let tournamentId = document.getElementById('tournamentIdText').value;
 	let eventId = document.getElementById('eventIdText').value;
@@ -75,28 +77,35 @@ function init(options){
 		return;
 	}
 
+
 	setIdsPromise
 		.then(storeSetsInCache)
 		.then(setCallbackFunctions)
+		.then((ids) => { 
+			// Controls the automatic grooming of Incomplete, Completed, 
+			// and Stale set sorting. Set checkPeriod to null to deactivate
+			if(!GROOM_INTERVAL && checkPeriod){
+				GROOM_INTERVAL = setInterval(() => {
+					groomCompleted();
+					groomIncomplete();
+					groomStale();
+				}, checkPeriod)
+			}
+			else if(GROOM_INTERVAL)
+				clearInterval(GROOM_INTERVAL);
+
+			return ids;
+		})
+		.then(ids => { return Promise.resolve(ids); })
 		.catch(console.error);
 
-	// Controls the automatic grooming of Incomplete, Completed, 
-	// and Stale set sorting. Set checkPeriod to null to deactivate
-	if(!GROOM_INTERVAL && checkPeriod){
-		GROOM_INTERVAL = setInterval(() => {
-			groomCompleted();
-			groomIncomplete();
-			groomStale();
-		}, checkPeriod)
-	}
-	else if(GROOM_INTERVAL)
-		clearInterval(GROOM_INTERVAL);
+	
 }
 
 /** SET FIREBASE EVENT HANDLING **/
 function storeSetsInCache(ids){
 	ids.forEach(id => {
-		incomplete[id] = {};
+		ggResults.incomplete[id] = {};
 	})
 	return ids;
 }
@@ -113,6 +122,16 @@ function smashggSetCallback(snapshot){
 	let val = snapshot.val();
 	let set = val.entities.sets;
 	sort(set);
+
+	let playerIds = [set.entrant1Id, set.entrant2Id];
+	playerIds.forEach(id => {
+		if(!id) return;
+		let thisPlayer = database.ref('/tournament/player/' + id).orderByKey();
+		thisPlayer.on('value', snapshot => {
+			let player = snapshot.val();
+			ggResults.players[player.id] = player;
+ 		})
+	})
 }
 
 function sort(set){
@@ -129,40 +148,40 @@ function sort(set){
 
 function addToCompleted(set){
 	let id = set.id;
-	if(completed.hasOwnProperty(id)) 
+	if(ggResults.completed.hasOwnProperty(id)) 
 		return;
 
-	completed[id] = set;	
+	ggResults.completed[id] = set;	
 	
-	if(incomplete.hasOwnProperty(id))
-		delete incomplete[id];
-	else if(stale.hasOwnProperty(id))
-		delete stale[id];
+	if(ggResults.incomplete.hasOwnProperty(id))
+		delete ggResults.incomplete[id];
+	else if(ggResults.stale.hasOwnProperty(id))
+		delete ggResults.stale[id];
 }
 
 function addToIncomplete(set){
 	let id = set.id;
-	if(incomplete.hasOwnProperty(id))
+	if(ggResults.incomplete.hasOwnProperty(id))
 		return;
 
-	incomplete[id] = set;
+	ggResults.incomplete[id] = set;
 	
-	if(completed.hasOwnProperty(id))
-		delete completed[id];
-	else if(stale.hasOwnProperty(id))
-		delete stale[id];
+	if(ggResults.completed.hasOwnProperty(id))
+		delete ggResults.completed[id];
+	else if(ggResults.stale.hasOwnProperty(id))
+		delete ggResults.stale[id];
 }
 
 function addToStale(set){
 	let id = set.id;
-	if(stale.hasOwnProperty(id))
+	if(ggResults.stale.hasOwnProperty(id))
 		return;	
-	stale[id] = set;
+	ggResults.stale[id] = set;
 	
-	if(completed.hasOwnProperty(id))
-		delete completed[id];
-	else if(incomplete.hasOwnProperty[id])
-		delete incomplete[id];
+	if(ggResults.completed.hasOwnProperty(id))
+		delete ggResults.completed[id];
+	else if(ggResults.incomplete.hasOwnProperty[id])
+		delete ggResults.incomplete[id];
 }
 
 /** TIME CALCULATION */
@@ -183,22 +202,22 @@ function isStale(timestamp){
 
 /** SET STORAGE */
 function groomCompleted(){
-	for(let id in completed){
-		let set = completed[id];
+	for(let id in ggResults.completed){
+		let set = ggResults.completed[id];
 		sort(set);
 	}
 }
 
 function groomIncomplete(){
-	for(let id in incomplete){
-		let set = incomplete[id];
+	for(let id in ggResults.incomplete){
+		let set = ggResults.incomplete[id];
 		sort(set);
 	}
 }
 
 function groomStale(){
-	for(let id in stale){
-		let set = stale[id];
+	for(let id in ggResults.stale){
+		let set = ggResults.stale[id];
 		sort(set);
 	}
 }
@@ -253,27 +272,40 @@ function getPhaseGroupSetIds(groupId){
 
 function reset(){
 	
-	for(var id in incomplete){
+	for(var id in ggResults.incomplete){
 		let thisSet = database.ref('/tournament/set/' + id).orderByKey();
 		thisSet.off();
 	}
 
-	for(var id in completed){
+	for(var id in ggResults.completed){
 		let thisSet = database.ref('/tournament/set/' + id).orderByKey();
 		thisSet.off();
 	}
 
-	for(var id in stale){
+	for(var id in ggResults.stale){
 		let thisSet = database.ref('/tournament/set/' + id).orderByKey();
 		thisSet.off();
 	}
 
-	incomplete = {};
-	completed = {};
-	stale = {};
+	ggResults.incomplete = {};
+	ggResults.completed = {};
+	ggResults.stale = {};
+	ggResults.player = {};
 }
 
-document.getElementById('typeText').value = 'event';
-document.getElementById('tournamentIdText').value = 'liva-s-api-test-do-not-mind-me';
-document.getElementById('eventIdText').value = 'melee-singles';
-//getEventSetIds('melee-singles', 'ceo-2016').then(console.log);
+function getCompleted(){
+	return Object.values(ggResults.completed);
+}
+function getIncomplete(){
+	return Object.values(ggResults.incomplete);
+}
+function getStale(){
+	return Object.values(ggResults.stale);
+}
+
+ggResults.getRecentResults = init;
+ggResults.getCompleted = getCompleted;
+ggResults.getIncomplete = getIncomplete;
+ggResults.getStale = getStale;
+
+module.exports = ggResults;

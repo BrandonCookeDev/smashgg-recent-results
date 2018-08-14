@@ -6,7 +6,7 @@
 	<link rel="stylesheet" type="text/css" href="lib/bootstrap.min.css" />
 	<title>Document</title>
 </head>
-<body>
+<body ng-app="myApp">
 	<!--
 	<select name="type" id="typeSelect">
 		<option>TOURNAMENT</option>
@@ -15,33 +15,38 @@
 		<option>PHASEGROUP</option>
 	</select><br/>
 	-->
-	<div class="container">
+	<div class="container" ng-controller="myCtrl">
 		<div class="row">
-			<input type="text" name="type" id="typeText" placeholder="type"><br/>
-			<input type="text" name="tournamentId" id="tournamentIdText" placeholder="tournamentId"><br/>
-			<input type="text" name="eventId" id="eventIdText" placeholder="eventId"><br/>
-			<input type="text" name="phaseId" id="phaseIdText" placeholder="phaseId"><br/>
-			<input type="text" name="groupId" id="groupIdText" placeholder="groupId"><br/>
-			<button onclick="run()" value="run">Run</button>
+			<input type="text" ng-model="form.type" name="type" id="typeText" placeholder="type"><br/>
+			<input type="text" ng-model="form.tournamentId" name="tournamentId" id="tournamentIdText" placeholder="tournamentId"><br/>
+			<input type="text" ng-model="form.eventId" name="eventId" id="eventIdText" placeholder="eventId"><br/>
+			<input type="text" ng-model="form.phaseId" name="phaseId" id="phaseIdText" placeholder="phaseId"><br/>
+			<input type="text" ng-model="form.groupId" name="groupId" id="groupIdText" placeholder="groupId"><br/>
+			<button value="run" ng-click="submitRecentResultsQuery()">Run</button>
 		</div>
 		<div class="row">
 			<div class="col-md-4">
 				<h4>Incomplete</h4>
+				{{incomplete}}
 			</div>
 			<div class='col-md-4'>
 				<h4>Completed</h4>
+				{{completed}}
 			</div>
 			<div class='col-md-4'>
 				<h4>Stale</h4>
+				{{stale}}
 			</div>
 		</div>
 	</div>
 	
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
 	<script src="https://www.gstatic.com/firebasejs/5.3.1/firebase.js"></script>
 	<!--<script src="lib/firebase.js"></script>-->
 	<script src="lib/moment.js"></script>
 	<script src="lib/smashgg-promise.js"></script>
 	<script src="lib/bootstrap.min.js"></script>
 	<script src="./smashggRecentResults.js" ></script>
+	<script src="./app.js"></script>
 </body>
 </html>
