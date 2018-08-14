@@ -573,7 +573,7 @@ class PhaseGroup{
 
             let players = [];
             ThisPhaseGroup.data.entities.entrants.forEach(entrant => {
-                let P = Player.resolve(entrant);
+                let P = ggPlayer.resolve(entrant);
                 players.push(P);
             });
             ThisPhaseGroup.players = players;
@@ -688,10 +688,10 @@ class Set{
 			throw new Error('Event Id for Set cannot be null');
 		if(!round)
 			throw new Error('Round for Set cannot be null');
-		if(!(player1 instanceof Player))
-			throw new Error('Winner Player for Set cannot be null, and must be an instance of Player');
-		if(!(player2 instanceof Player))
-            throw new Error('Loser Player for Set cannot be null, and must be an instance of Player');
+		if(!(player1 instanceof ggPlayer))
+			throw new Error('Winner Player for Set cannot be null, and must be an instance of ggPlayer');
+		if(!(player2 instanceof ggPlayer))
+            throw new Error('Loser Player for Set cannot be null, and must be an instance of ggPlayer');
 
 		this.id = id;
 		this.eventId = eventId;
@@ -794,7 +794,7 @@ class Set{
 }
 
 /** Players */
-class Player{
+class ggPlayer{
     constructor(id, tag, name, country, state, sponsor, participantId, data){
         if(!id)
             throw new Error('Player ID cannot be null');
@@ -823,7 +823,7 @@ class Player{
 
             let playerDetails = data.mutations.players[playerId];
 
-            let P = new Player(
+            let P = new ggPlayer(
                 parseInt(playerId),
                 playerDetails.gamerTag,
                 playerDetails.name,
@@ -905,8 +905,8 @@ smashgg.getTournament = Tournament.get;
 smashgg.getEvent = Event.get;
 smashgg.getPhase = Phase.get;
 smashgg.getPhaseGroup = PhaseGroup.get;
-smashgg.getPlayer = Player.get;
-smashgg.getPlayers = Player.getFromIdArray;
+smashgg.getPlayer = ggPlayer.get;
+smashgg.getPlayers = ggPlayer.getFromIdArray;
 smashgg.getMatch = Match.get;
 smashgg.getMatches = Match.getFromIdArray;
 

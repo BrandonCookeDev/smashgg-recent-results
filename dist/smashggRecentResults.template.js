@@ -9,10 +9,12 @@ let ggResults = new Object();
 ggResults.stale = {};
 ggResults.completed = {};
 ggResults.incomplete = {};
+ggResults.phaseGroups = {};
 ggResults.players = {};
 
 var STALE_CEILING = 5;
 var GROOM_INTERVAL;
+var CALLBACK;
 
 // Initialize Firebase
 // TODO: Replace with your project's customized code snippet
@@ -52,10 +54,12 @@ function init(options){
 	let eventId = options.eventId;
 	let phaseId = options.phaseId;
 	let groupId = options.groupId;
+	let callback = options.callback;
+	let resetFlag = options.reset != undefined ? reset == true : true;
 
+	CALLBACK = callback;
 	STALE_CEILING = amount;
-
-	reset();
+	if(resetFlag) reset();
 
 	// one time call to db to get all sets from Tournament-X
 	let setIdsPromise;
@@ -78,7 +82,7 @@ function init(options){
 	}
 
 
-	setIdsPromise
+	return setIdsPromise
 		.then(storeSetsInCache)
 		.then(setCallbackFunctions)
 		.then((ids) => { 
@@ -111,9 +115,10 @@ function storeSetsInCache(ids){
 }
 
 function setCallbackFunctions(ids){
+	let cb = CALLBACK || smashggSetCallback;
 	ids.forEach(id => {
 		let thisSet = database.ref('/tournament/set/' + id).orderByKey();
-		thisSet.on('value', smashggSetCallback);
+		thisSet.on('value', cb);
 	})
 	return ids;
 }
@@ -121,14 +126,15 @@ function setCallbackFunctions(ids){
 function smashggSetCallback(snapshot){
 	let val = snapshot.val();
 	let set = val.entities.sets;
+	sort(set);
 	
-	getPlayers(set.entrant1Id, set.entrant2Id)
-		.then(players => {
-			set.player1 = players[0] || null;
-			set.player2 = players[1] || null;
-			sort(set);
+	getPlayersForPhaseGroup(set.phaseGroupId)
+		.then(players => { 
+			players.forEach(player => {
+				ggResults.players[player.participantId] = player;
+			})
 		})
-		.catch(console.error)
+		.catch(console.error);
 }
 
 function sort(set){
@@ -182,7 +188,7 @@ function addToStale(set){
 }
 
 /** TIME CALCULATION */
-function isStale(timestamp){
+function isStale(timestamp, ceiling){
 	let now = moment();
 	let then = moment.unix(timestamp);
 	let diff = moment.duration(now.diff(then));
@@ -191,7 +197,7 @@ function isStale(timestamp){
 		diff.days() > 0 || diff.hours() > 0)
 		return true;
 
-	if(diff.minutes() >= STALE_CEILING)
+	if(diff.minutes() >= (ceiling || STALE_CEILING))
 		return true;
 	else
 		return false	
@@ -267,6 +273,17 @@ function getPhaseGroupSetIds(groupId){
 		.catch(console.error);
 }
 
+function getPlayersForPhaseGroup(groupId){
+	if(ggResults.phaseGroups.hasOwnProperty(groupId)) 
+		return Promise.resolve(null);
+	return smashgg.getPhaseGroup(groupId)
+		.then(group => { 
+			ggResults.phaseGroups[groupId] = group;
+			return group.getPlayers()
+		})
+		.catch(console.error);
+}
+
 function getPlayers(){
 	let ids = Object.values(arguments);
 	ids.forEach(id => { 
@@ -304,6 +321,7 @@ function reset(){
 	ggResults.incomplete = {};
 	ggResults.completed = {};
 	ggResults.stale = {};
+	ggResults.phaseGroups = {};
 	ggResults.player = {};
 }
 
@@ -316,10 +334,24 @@ function getIncomplete(){
 function getStale(){
 	return Object.values(ggResults.stale);
 }
+function getPhaseGroups(){
+	return Object.values(ggResults.phaseGroups);
+}
+function getPlayers(){
+	return Object.values(ggResults.players);
+} 
+function getPlayerByEntrantId(entrantId){
+	return ggResults.players[entrantId]
+}
 
 ggResults.getRecentResults = init;
 ggResults.getCompleted = getCompleted;
 ggResults.getIncomplete = getIncomplete;
 ggResults.getStale = getStale;
+ggResults.getPlayers = getPlayers;
+ggResults.getPlayerByEntrantId = getPlayerByEntrantId;
+ggResults.getPhaseGroups = getPhaseGroups;
+ggResults.isStale = isStale;
+
 
 module.exports = ggResults;

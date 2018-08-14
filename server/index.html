@@ -17,12 +17,16 @@
 	-->
 	<div class="container" ng-controller="myCtrl">
 		<div class="row">
-			<input type="text" ng-model="form.type" name="type" id="typeText" placeholder="type"><br/>
-			<input type="text" ng-model="form.tournamentId" name="tournamentId" id="tournamentIdText" placeholder="tournamentId"><br/>
-			<input type="text" ng-model="form.eventId" name="eventId" id="eventIdText" placeholder="eventId"><br/>
-			<input type="text" ng-model="form.phaseId" name="phaseId" id="phaseIdText" placeholder="phaseId"><br/>
-			<input type="text" ng-model="form.groupId" name="groupId" id="groupIdText" placeholder="groupId"><br/>
-			<button value="run" ng-click="submitRecentResultsQuery()">Run</button>
+			<form>
+				<input type="text" ng-model="form.type" name="type" id="typeText" placeholder="type"/><br/>
+				<input type="text" ng-model="form.tournamentId" name="tournamentId" id="tournamentIdText" placeholder="tournamentId"/><br/>
+				<input type="text" ng-model="form.eventId" name="eventId" id="eventIdText" placeholder="eventId"/><br/>
+				<input type="text" ng-model="form.phaseId" name="phaseId" id="phaseIdText" placeholder="phaseId"/><br/>
+				<input type="text" ng-model="form.groupId" name="groupId" id="groupIdText" placeholder="groupId"/><br/>
+				<input type="text" ng-model="form.reset" name="reset" id="resetText" placeholder="reset T/F"/><br/>
+				<button value="run" ng-click="submitRecentResultsQuery()">Run</button> <br/>
+				<p>{{status}}</p>
+			</form>
 		</div>
 		<div class="row">
 			<div class="col-md-4">
