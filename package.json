@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "server": "node server/server"
   },
   "author": "Brandon Cooke",
   "license": "ISC",
@@ -25,6 +26,7 @@
   },
   "devDependencies": {
     "chai": "^4.1.2",
+    "eslint": "^5.4.0",
     "mocha": "^5.2.0",
     "request": "^2.87.0",
     "request-promise": "^4.2.2"

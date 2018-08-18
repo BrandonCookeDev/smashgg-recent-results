@@ -1,7 +1,7 @@
 'use strict';
 
 const path = require('path');
-require('../app/merger');
+require('./merger');
 
 let express = require('express');
 let app = express();

@@ -34,6 +34,7 @@ let database = firebase.database();
 class Bucket extends Object{
 
 	constructor(label){
+		super();
 		this.label = label;
 		this.bucket = {};
 	}
@@ -61,7 +62,9 @@ class Bucket extends Object{
 	}
 
 	toArray(){
-		return Object.values(this);
+		let ret = Object.assign({}, this);
+		delete ret.label;
+		return Object.values(ret);
 	}
 
 	static addToAll(index, value, buckets){
@@ -79,8 +82,6 @@ class Bucket extends Object{
 }
 
 class SortingHat{
-
-		SortingHat.StaleCeiling = 5;
 
 	static setStaleCeiling(ceiling){
 		SortingHat.StaleCeiling = ceiling;
@@ -274,7 +275,7 @@ class SetAggregator{
 						set.entrant1 = player1;
 						set.entrant2 = player2;
 						cb(null, set);
-					});
+					})
 					.catch(err => {
 						console.error(err);
 						cb(err);
@@ -334,8 +335,8 @@ class SetAggregator{
 	}
 
 	static getPlayersForPhaseGroup(groupId){
-		if(SetAggregator.getPhaseGroupBucket.exists(groupId)) 
-			return Promise.resolve(SetAggregator.getPhaseGroupBucket().get(groupId));
+		if(SetAggregator.getPhaseGroupBucket().exists(groupId)) 
+			return Promise.resolve(SetAggregator.getPlayersBucket().toArray());
 
 		return smashgg.getPhaseGroup(groupId)
 			.then(group => { 
@@ -348,14 +349,14 @@ class SetAggregator{
 	static getPlayers(){
 		let ids = Object.values(arguments);
 		ids.forEach(id => { 
-			if(!id || SetAggregator.getPlayersBucket.exists(id))
+			if(!id || SetAggregator.getPlayersBucket().exists(id))
 				ids.splice(ids.indexOf(id), 1)
 		})
 
 		return smashgg.getPlayers(ids)
 			.then(players => {
 				players.forEach(player => { 
-					SetAggregator.getPlayersBucket(player.id, player);
+					SetAggregator.getPlayersBucket().add(player.id, player);
 				})
 				return players;
 			})

@@ -23,6 +23,18 @@ app.controller('myCtrl', function($scope) {
 
 		$scope.submitRecentResultsQuery = function(){
 			$scope.status = 'Gathering sets';
+			let aggregator = new ggResults.SetAggregator(
+				$scope.form.type,
+				$scope.form.tournamentId,
+				$scope.form.eventId, 
+				$scope.form.phaseId,
+				$scope.form.groupId
+			);
+			aggregator.getSets(function(err, set){
+				console.log(set);
+			})
+
+			/*
 			ggResults.getRecentResults($scope.form)
 				.then(ids => {
 					$scope.status = 'Got matches successfully!'
@@ -30,8 +42,10 @@ app.controller('myCtrl', function($scope) {
 				.catch(e => {
 					$scope.status = 'ERROR: ' + e.message;
 				})
+			*/
 		}
 
+		/*
 		function formatSets(sets){
 			if(!sets) return null;
 			else if(sets.length == 0) return [];
@@ -54,4 +68,5 @@ app.controller('myCtrl', function($scope) {
 				$scope.stale = formatSets(ggResults.getStale());
 			})
 		}, 1000);
+		*/
 	})
