@@ -35,6 +35,9 @@ app.controller('myCtrl', function($scope) {
 		function formatSets(sets){
 			if(!sets) return null;
 			else if(sets.length == 0) return [];
+			
+			sets = sets.filter(set => { return set.entrant1Score != -1 && set.entrant2Score != -1; });
+
 			return sets.map(set => {
 				let p1 = ggResults.getPlayerByEntrantId(set.entrant1Id);
 				let p2 = ggResults.getPlayerByEntrantId(set.entrant2Id);

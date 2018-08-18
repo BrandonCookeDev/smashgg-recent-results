@@ -23,6 +23,8 @@
 				<input type="text" ng-model="form.eventId" name="eventId" id="eventIdText" placeholder="eventId"/><br/>
 				<input type="text" ng-model="form.phaseId" name="phaseId" id="phaseIdText" placeholder="phaseId"/><br/>
 				<input type="text" ng-model="form.groupId" name="groupId" id="groupIdText" placeholder="groupId"/><br/>
+				<input type="text" ng-model="form.amount" name="amount" id="amountText" placeholder="minutes until completed is stale" /> <br/>
+				<input type="text" ng-model="form.checkPeriod" name="checkPeriod" id="checkPeriodText" placeholder="checkPeriod in MS" /><br/>
 				<input type="text" ng-model="form.reset" name="reset" id="resetText" placeholder="reset T/F"/><br/>
 				<button value="run" ng-click="submitRecentResultsQuery()">Run</button> <br/>
 				<p>{{status}}</p>
@@ -50,7 +52,7 @@
 	<script src="lib/moment.js"></script>
 	<script src="lib/smashgg-promise.js"></script>
 	<script src="lib/bootstrap.min.js"></script>
-	<script src="./smashggRecentResults.js" ></script>
+	<script src="./ggResults.js" ></script>
 	<script src="./app.js"></script>
 </body>
 </html>
