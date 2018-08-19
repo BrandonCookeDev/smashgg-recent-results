@@ -111,13 +111,19 @@ class SortingHat{
 	static sort(set){
 		let completedAt = set.completedAt;
 		if(completedAt){
-			if(isStale(completedAt))
+			if(SortingHat.isStale(completedAt)){
+				set.class = 'STALE';
 				SortingHat.addToStale(set);
-			else
+			}
+			else{
+				set.class = 'FRESH';
 				SortingHat.addToFresh(set);
+			}
 		}
-		else
+		else{
+			set.class = 'INCOMPLETE';
 			SortingHat.addToIncomplete(set);
+		}
 	}
 
 	static isStale(timestamp, ceiling){
@@ -274,6 +280,7 @@ class SetAggregator{
 						let player2 = SetAggregator.getPlayersBucket().get(set.entrant2Id);
 						set.entrant1 = player1;
 						set.entrant2 = player2;
+						SortingHat.sort(set);
 						cb(null, set);
 					})
 					.catch(err => {
@@ -403,319 +410,9 @@ ggResults.SetAggregator = SetAggregator;
 ggResults.SortingHat = SortingHat;
 ggResults.Groomer = Groomer;
 ggResults.Bucket = Bucket;
+ggResults.isStale = SortingHat.isStale;
+ggResults.getFreshSets = SortingHat.getFreshBucket;
+ggResults.getStaleSets = SortingHat.getStaleBucket;
+ggResults.getIncompleteSets = SortingHat.getIncompleteBucket;
 
 module.exports = ggResults;
-
-/*
-
-
-function setStaleCeiling(newCeiling, checkPeriod){
-	STALE_CEILING = newCeiling;
-	if(GROOM_INTERVAL)
-		clearInterval(GROOM_INTERVAL);
-	
-	let thisCheckPeriod = isNaN(checkPeriod) ? null : parseInt(checkPeriod);
-}
-
-function init(options){
-	// parse options
-	let type = options.type || '';
-	let amount = isNaN(options.amount) ? 5 : parseInt(options.amount);
-	let checkPeriod = isNaN(options.checkPeriod) ? null : parseInt(options.checkPeriod); //default null
-	let tournamentId = options.tournamentId;
-	let eventId = options.eventId;
-	let phaseId = options.phaseId;
-	let groupId = options.groupId;
-	let callback = options.callback;
-	let resetFlag = options.reset != undefined ? reset.toString() == 'true' : true;
-
-	CALLBACK = callback;
-	STALE_CEILING = amount;
-	if(resetFlag) reset();
-
-	// one time call to db to get all sets from Tournament-X
-	let setIdsPromise;
-	switch(type.toLowerCase()){
-	case 'tournament':
-		setIdsPromise = getTournamentSetIds(tournamentId);
-		break;
-	case 'event':
-		setIdsPromise = getEventSetIds(eventId, tournamentId);
-		break;
-	case 'phase':
-		setIdsPromise = getPhaseSetIds(phaseId);
-		break;
-	case 'phasegroup':
-		setIdsPromise = getPhaseGroupSetIds(groupId);
-		break;
-	default: 
-		console.error('type may only be (TOURNAMENT|EVENT|PHASE|PHASEGROUP)');
-		return;
-	}
-
-
-	return setIdsPromise
-		.then(storeSetsInCache)
-		.then(setCallbackFunctions)
-		.then((ids) => { 
-			// Controls the automatic grooming of Incomplete, Completed, 
-			// and Stale set sorting. Set checkPeriod to null to deactivate
-			Groomer.getInstance().clear();
-			if(checkPeriod){
-				Groomer.getInstance().set(checkPeriod);
-
-			}
-		})
-		.then(ids => { return Promise.resolve(ids); })
-		.catch(console.error);
-
-	
-}
-
-function storeSetsInCache(ids){
-	ids.forEach(id => {
-		ggResults.incomplete[id] = {};
-	})
-	return ids;
-}
-
-function setCallbackFunctions(ids){
-	let cb = CALLBACK || smashggSetCallback;
-	ids.forEach(id => {
-		let thisSet = database.ref('/tournament/set/' + id).orderByKey();
-		thisSet.on('value', cb);
-	})
-	return ids;
-}
-
-function smashggSetCallback(snapshot){
-	let val = snapshot.val();
-	let set = val.entities.sets;
-	sort(set);
-	
-	getPlayersForPhaseGroup(set.phaseGroupId)
-		.then(players => { 
-			players.forEach(player => {
-				ggResults.players[player.participantId] = player;
-			})
-		})
-		.catch(console.error);
-}
-
-function sort(set){
-	let completedAt = set.completedAt;
-	if(completedAt){
-		if(isStale(completedAt))
-			addToStale(set);
-		else
-			addToCompleted(set);
-	}
-	else
-		addToIncomplete(set);
-}
-
-function addToCompleted(set){
-	let id = set.id;
-	if(ggResults.completed.hasOwnProperty(id)) 
-		return;
-
-	ggResults.completed[id] = set;	
-	
-	if(ggResults.incomplete.hasOwnProperty(id))
-		delete ggResults.incomplete[id];
-	if(ggResults.stale.hasOwnProperty(id))
-		delete ggResults.stale[id];
-}
-
-function addToIncomplete(set){
-	let id = set.id;
-	if(ggResults.incomplete.hasOwnProperty(id))
-		return;
-
-	ggResults.incomplete[id] = set;
-	
-	if(ggResults.completed.hasOwnProperty(id))
-		delete ggResults.completed[id];
-	if(ggResults.stale.hasOwnProperty(id))
-		delete ggResults.stale[id];
-}
-
-function addToStale(set){
-	let id = set.id;
-	if(ggResults.stale.hasOwnProperty(id))
-		return;	
-	ggResults.stale[id] = set;
-	
-	if(ggResults.completed.hasOwnProperty(id))
-		delete ggResults.completed[id];
-	if(ggResults.incomplete.hasOwnProperty[id])
-		delete ggResults.incomplete[id];
-}
-
-function isStale(timestamp, ceiling){
-	let now = moment();
-	let then = moment.unix(timestamp);
-	let diff = moment.duration(now.diff(then));
-
-	if(diff.years() > 0 || diff.months() > 0 || 
-		diff.days() > 0 || diff.hours() > 0)
-		return true;
-
-	if(diff.minutes() >= (ceiling || STALE_CEILING))
-		return true;
-	else
-		return false	
-}
-
-function groomCompleted(){
-	for(let id in ggResults.completed){
-		let set = ggResults.completed[id];
-		sort(set);
-	}
-}
-
-function groomIncomplete(){
-	for(let id in ggResults.incomplete){
-		let set = ggResults.incomplete[id];
-		sort(set);
-	}
-}
-
-function groomStale(){
-	for(let id in ggResults.stale){
-		let set = ggResults.stale[id];
-		sort(set);
-	}
-}
-
-function getTournamentSetIds(tournamentId){
-	if(!tournamentId) {
-		console.error('type Tournament must include a tournamentId');
-		return;
-	}
-	return smashgg.getTournament(tournamentId)
-		.then(tourney => { return tourney.getAllMatchIds(); })
-		.catch(console.error);
-}
-
-function getEventSetIds(eventId, tournamentId){
-	if(!eventId){
-		console.error('type event must include an eventId');
-		return;
-	}
-	else if(isNaN(eventId) && !tournamentId){
-		console.error('type event must have tournament slug if event slug is included');
-		return;
-	}
-
-	return smashgg.getEvent(tournamentId, eventId)
-		.then(event => { return event.getEventMatchIds(); })
-		.catch(console.error);
-}
-
-function getPhaseSetIds(phaseId){
-	if(!phaseId){
-		console.error('type phase must include a phaseId');
-		return;
-	}
-
-	return smashgg.getPhase(phaseId)
-		.then(phase => { return phase.getPhaseMatchIds(); })
-		.catch(console.error);
-}
-
-function getPhaseGroupSetIds(groupId){
-	if(!groupId){
-		console.error('type phasegroup must include a groupId');
-		return;
-	}
-
-	return smashgg.getPhaseGroup(groupId)
-		.then(group => { return group.getMatchIds(); })
-		.catch(console.error);
-}
-
-function getPlayersForPhaseGroup(groupId){
-	if(ggResults.phaseGroups.hasOwnProperty(groupId)) 
-		return Promise.resolve(null);
-	return smashgg.getPhaseGroup(groupId)
-		.then(group => { 
-			ggResults.phaseGroups[groupId] = group;
-			return group.getPlayers()
-		})
-		.catch(console.error);
-}
-
-function getPlayers(){
-	let ids = Object.values(arguments);
-	ids.forEach(id => { 
-		if(!id || ggResults.players.hasOwnProperty(id))
-			ids.splice(ids.indexOf(id), 1)
-	})
-
-	return smashgg.getPlayers(ids)
-		.then(players => {
-			players.forEach(player => { 
-				ggResults.players[player.id] = player;
-			})
-			return players;
-		})
-		.catch(console.error);
-}
-
-function reset(){
-	
-	for(var id in ggResults.incomplete){
-		let thisSet = database.ref('/tournament/set/' + id).orderByKey();
-		thisSet.off();
-	}
-
-	for(var id in ggResults.completed){
-		let thisSet = database.ref('/tournament/set/' + id).orderByKey();
-		thisSet.off();
-	}
-
-	for(var id in ggResults.stale){
-		let thisSet = database.ref('/tournament/set/' + id).orderByKey();
-		thisSet.off();
-	}
-
-	ggResults.incomplete = {};
-	ggResults.completed = {};
-	ggResults.stale = {};
-	ggResults.phaseGroups = {};
-	ggResults.player = {};
-}
-
-function getCompleted(){
-	return Object.values(ggResults.completed);
-}
-function getIncomplete(){
-	return Object.values(ggResults.incomplete);
-}
-function getStale(){
-	return Object.values(ggResults.stale);
-}
-function getPhaseGroups(){
-	return Object.values(ggResults.phaseGroups);
-}
-function getPlayers(){
-	return Object.values(ggResults.players);
-} 
-function getPlayerByEntrantId(entrantId){
-	return ggResults.players[entrantId]
-}
-
-ggResults.getRecentResults = init;
-ggResults.getCompleted = getCompleted;
-ggResults.getIncomplete = getIncomplete;
-ggResults.getStale = getStale;
-ggResults.getPlayers = getPlayers;
-ggResults.getPlayerByEntrantId = getPlayerByEntrantId;
-ggResults.getPhaseGroups = getPhaseGroups;
-ggResults.isStale = isStale;
-ggResults.setStaleCeiling = setStaleCeiling;
-
-
-module.exports = ggResults;
-*/
