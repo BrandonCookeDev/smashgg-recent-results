@@ -2,15 +2,17 @@ var smashgg = new Object();
 
 const API_URL = 'https://i9nvyv08rj.execute-api.us-west-2.amazonaws.com/prod/smashgg-lambda';
 
-Array.prototype.flatten = function(iterations){
+Array.prototype.flatten = function(depth){
     let root = [];
-    iterations = iterations || 1;
-    for(let i = 0; i < iterations; i++){
-        let element = this[i];
-        if(Array.isArray(element))
-            root = root.concat(element)
-        else   
-            root.push(element);
+    depth = depth || 1;
+    for(let i = 0; i < depth; i++){
+        for(let j = 0; j < this.length; j++){
+            let element = this[i];
+            if(Array.isArray(element))
+                root = root.concat(element)
+            else   
+                root.push(element);
+        }
     }
     return root;
 }
