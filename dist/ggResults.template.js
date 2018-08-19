@@ -36,7 +36,6 @@ class Bucket extends Object{
 	constructor(label){
 		super();
 		this.label = label;
-		this.bucket = {};
 	}
 
 	add(index, element){
