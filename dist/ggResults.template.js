@@ -110,8 +110,10 @@ class SortingHat{
 	static sort(set){
 		let completedAt = set.completedAt;
 		if(completedAt){
-			if(SortingHat.isStale(completedAt)){
+			let diff = SortingHat.isStale(completedAt);
+			if(diff){
 				set.class = 'STALE';
+				set.staleBy = diff.humanize();
 				SortingHat.addToStale(set);
 			}
 			else{
@@ -132,10 +134,10 @@ class SortingHat{
 
 		if(diff.years() > 0 || diff.months() > 0 || 
 			diff.days() > 0 || diff.hours() > 0)
-			return true;
+			return diff;
 
 		if(diff.minutes() >= (ceiling || 5))
-			return true;
+			return diff;
 		else
 			return false	
 	}
@@ -206,6 +208,10 @@ class SortingHat{
 
 class SetAggregator{
 
+	static init(){
+
+	}
+
 	constructor(type, tournamentId, eventId, phaseId, groupId){
 		this.type = type;
 		this.tournamentId = tournamentId;
@@ -246,24 +252,9 @@ class SetAggregator{
 			})
 	}	
 
-	static getPlayersBucket(){
-		if(!SetAggregator.PlayersBucket){
-			SetAggregator.PlayersBucket = new Bucket('PLAYERS');
-		}
-		return SetAggregator.PlayersBucket;
-	}
-
-	static getPhaseGroupBucket(){
-		if(!SetAggregator.PhaseGroupBucket){
-			SetAggregator.PhaseGroupBucket = new Bucket('PHASEGROUP');
-		}
-		return SetAggregator.PhaseGroupBucket;
-	}
-
-
 	static setCallbackFunctions(ids, cb) {
 		ids.forEach(id => {
-			let thisSet = database.ref('/tournament/set/' + id).orderByKey();
+			let thisSet = database.ref('{{firebaseDbPath}}' + id).orderByKey();
 			thisSet.on('value', snapshot => {
 				let val = snapshot.val();
 				let set = val.entities.sets;
@@ -271,12 +262,19 @@ class SetAggregator{
 				SetAggregator.getPlayersForPhaseGroup(set.phaseGroupId)
 					.then(players => { 
 						players.forEach(player => {
-							SetAggregator.getPlayersBucket().add(player.participantId, player);
+							PlayersBucket.getInstance().add(player.participantId, player);
 						})
 					})
+					.then(() => { 
+						return SetAggregator.getEventName(set.eventId)
+							.then(eventName => {
+								set.eventName = eventName;
+								return set;
+							})
+					})
 					.then(() => {
-						let player1 = SetAggregator.getPlayersBucket().get(set.entrant1Id);
-						let player2 = SetAggregator.getPlayersBucket().get(set.entrant2Id);
+						let player1 = PlayersBucket.getInstance().get(set.entrant1Id);
+						let player2 = PlayersBucket.getInstance().get(set.entrant2Id);
 						set.entrant1 = player1;
 						set.entrant2 = player2;
 						SortingHat.sort(set);
@@ -299,6 +297,10 @@ class SetAggregator{
 			return;
 		}
 		return smashgg.getTournament(tournamentId)
+			.then(tourney => {
+				TournamentBucket.getInstance().add(tournamentId, tourney);
+				return tourney;
+			})
 			.then(tourney => { return tourney.getAllMatchIds(); })
 			.catch(console.error);
 	}
@@ -314,6 +316,11 @@ class SetAggregator{
 		}
 
 		return smashgg.getEvent(tournamentId, eventId)
+			.then(event => {
+				let key = EventBucket.generateKey(eventId, tournamentId);
+				EventBucket.getInstance().add(event.id, event);
+				return event;
+			})
 			.then(event => { return event.getEventMatchIds(); })
 			.catch(console.error);
 	}
@@ -325,6 +332,10 @@ class SetAggregator{
 		}
 
 		return smashgg.getPhase(phaseId)
+			.then(phase => {
+				PhaseBucket.getInstance().add(phaseId, phase);
+				return phase;
+			})
 			.then(phase => { return phase.getPhaseMatchIds(); })
 			.catch(console.error);
 	}
@@ -336,17 +347,46 @@ class SetAggregator{
 		}
 
 		return smashgg.getPhaseGroup(groupId)
+			.then(group => {
+				PhaseGroupBucket.getInstance().add(groupId, group);
+				return group;
+			})
 			.then(group => { return group.getMatchIds(); })
 			.catch(console.error);
 	}
 
+	static getEventName(eventId, tournamentId){
+		let key = EventBucket.generateKey(eventId, tournamentId);
+		if(EventBucket.getInstance().exists(key))
+			return Promise.resolve(EventBucket.getInstance().get(key).getName());
+
+		return smashgg.getEvent(tournamentId, eventId)
+			.then(event => {
+				EventBucket.getInstance().add(key, event);
+				return event.getName();
+			})
+			.catch(console.error);
+	}
+
+	static getPhaseName(phaseId){
+		if(PhaseBucket.getInstance().exists(phaseId))
+			return Promise.resolve(PhaseBucket.getInstance().get(phaseId).getName());
+
+		return smashgg.getPhase(phaseId)
+			.then(phase => {
+				PhaseBucket.getInstance().add(phaseId, phase);
+				return phase.getName();
+			})
+			.catch(console.error);
+	}
+
 	static getPlayersForPhaseGroup(groupId){
-		if(SetAggregator.getPhaseGroupBucket().exists(groupId)) 
-			return Promise.resolve(SetAggregator.getPlayersBucket().toArray());
+		if(PhaseBucket.getInstance().exists(groupId)) 
+			return Promise.resolve(PhaseBucket.getInstance().toArray());
 
 		return smashgg.getPhaseGroup(groupId)
 			.then(group => { 
-				SetAggregator.getPhaseGroupBucket().add(groupId, group);
+				PhaseBucket.getInstance().add(groupId, group);
 				return group.getPlayers();
 			})
 			.catch(console.error);
@@ -355,14 +395,14 @@ class SetAggregator{
 	static getPlayers(){
 		let ids = Object.values(arguments);
 		ids.forEach(id => { 
-			if(!id || SetAggregator.getPlayersBucket().exists(id))
+			if(!id || PlayersBucket.getInstance().exists(id))
 				ids.splice(ids.indexOf(id), 1)
 		})
 
 		return smashgg.getPlayers(ids)
 			.then(players => {
 				players.forEach(player => { 
-					SetAggregator.getPlayersBucket().add(player.id, player);
+					PlayersBucket.getInstance().add(player.id, player);
 				})
 				return players;
 			})
@@ -405,6 +445,78 @@ class Groomer{
 
 }
 
+class TournamentBucket extends Bucket{
+	constructor(){
+		super();
+		this.label = 'TOURNAMENT';
+	}
+
+	static getInstance(){
+		if(!TournamentBucket.instance)
+			TournamentBucket.instance = new TournamentBucket();
+		return TournamentBucket.instance;
+	}
+}
+
+class EventBucket extends Bucket{
+	constructor(){
+		super();
+		this.label = 'EVENT';
+	}
+
+	static getInstance(){
+		if(!EventBucket.instance)
+			EventBucket.instance = new EventBucket();
+		return EventBucket.instance;
+	}
+
+	static generateKey(eventId, tournamentId){
+		if(isNaN(eventId))
+			return `${eventId}::${tournamentId}`;
+		else
+			return eventId;
+	}
+}
+
+class PhaseBucket extends Bucket{
+	constructor(){
+		super();
+		this.label = 'PHASE';
+	}
+
+	static getInstance(){
+		if(!PhaseBucket.instance)
+			PhaseBucket.instance = new PhaseBucket();
+		return PhaseBucket.instance;
+	}
+}
+
+class PhaseGroupBucket extends Bucket{
+	constructor(){
+		super();
+		this.label = 'PHASEGROUP';
+	}
+
+	static getInstance(){
+		if(!PhaseGroupBucket.instance)
+			PhaseGroupBucket.instance = new PhaseGroupBucket();
+		return PhaseGroupBucket.instance;
+	}
+}
+
+class PlayersBucket extends Bucket{
+	constructor(){
+		super();
+		this.label = 'PLAYERS';
+	}
+
+	static getInstance(){
+		if(!PlayersBucket.instance)
+			PlayersBucket.instance = new PlayersBucket();
+		return PlayersBucket.instance;
+	}
+}
+
 ggResults.SetAggregator = SetAggregator;
 ggResults.SortingHat = SortingHat;
 ggResults.Groomer = Groomer;
@@ -413,5 +525,9 @@ ggResults.isStale = SortingHat.isStale;
 ggResults.getFreshSets = SortingHat.getFreshBucket;
 ggResults.getStaleSets = SortingHat.getStaleBucket;
 ggResults.getIncompleteSets = SortingHat.getIncompleteBucket;
+ggResults.getTournamentBucket = TournamentBucket.getInstance();
+ggResults.getEventBucket = EventBucket.getInstance();
+ggResults.getPhaseBucket = PhaseBucket.getInstance();
+ggResults.getPhaseGroupBucket = PhaseGroupBucket.getInstance();
 
 module.exports = ggResults;

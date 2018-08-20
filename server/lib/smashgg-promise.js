@@ -267,10 +267,10 @@ class Event{
 
     static get(tournamentName, eventName, expands){
         return new Promise(function(resolve, reject){
-            if(!tournamentName)
-                return reject(new Error('Tournament Name cannot be null for Event'));
             if(!eventName)
                 return reject(new Error('Event Name cannot be null for Event'));
+            if(isNaN(eventName) && !tournamentName)
+                return reject(new Error('Tournament Name cannot be null for Event'));
     
             var data = {};
     

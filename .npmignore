@@ -1,0 +1,8 @@
+aws/
+.vscode/
+data/
+node_modules/
+server/
+.env
+.gitignore
+README.md

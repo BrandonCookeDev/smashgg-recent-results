@@ -40,14 +40,15 @@ app.controller('myCtrl', function($scope) {
 			if(!sets) return null;
 			else if(sets.length == 0) return [];
 			
-			sets = sets.filter(set => { return set.entrant1Score != -1 && set.entrant2Score != -1; });
+			sets = sets.filter(set => { return set.entrant1Score != -1 && set.entrant2Score != -1 && set.startedAt; });
 
 			return sets.map(set => {
-				let p1 = set.entrant1.tag;
-				let p2 = set.entrant2.tag;
+				let p1 = set.entrant1;
+				let p2 = set.entrant2;
 				let tag1 = p1 ? p1.tag : 'bye';
 				let tag2 = p2 ? p2.tag : 'bye';
-				return `${tag1} ${set.entrant1Score || 0} - ${set.entrant2Score || 0} ${tag2}`;
+				let staleBy = set.staleBy || '';
+				return `${tag1} ${set.entrant1Score || 0} - ${set.entrant2Score || 0} ${tag2} ${': ' + staleBy || ''}`;
 			})
 		}
 
