@@ -25,7 +25,7 @@
     "url": "git+https://github.com/BrandonCookeDev/smashgg-recent-results.git"
   },
   "bin":{
-      "init": "bin/init.js"
+      "ggResults_init": "bin/init.js"
   },
   "keywords": [
     "smashgg",
